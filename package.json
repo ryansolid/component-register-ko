@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "knockout": "*",
-    "component-register": "https://github.com/ryansolid/component-register.git"
+    "component-register": "*"
   }
 }
