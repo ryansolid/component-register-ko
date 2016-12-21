@@ -1,0 +1,17 @@
+{
+  "name": "component-register-ko",
+  "author": "Ryan Carniato",
+  "license": "MIT",
+  "version": "0.1.0",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "coffee --compile --bare --no-header --output lib/ src/"
+  },
+  "devDependencies": {
+    "coffee-script": "*"
+  },
+  "dependencies": {
+    "knockout": "*",
+    "component-register": "https://github.com/ryansolid/component-register.git"
+  }
+}
