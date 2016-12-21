@@ -1,11 +1,12 @@
 {
   "name": "component-register-ko",
+  "description": "Knockout implementation of Component Register",
   "author": "Ryan Carniato",
   "license": "MIT",
   "version": "0.1.0",
   "main": "lib/index.js",
   "scripts": {
-    "build": "coffee --compile --bare --no-header --output lib/ src/"
+    "prepublish": "coffee --compile --bare --no-header --output lib/ src/"
   },
   "devDependencies": {
     "coffee-script": "*"
