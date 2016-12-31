@@ -53,6 +53,7 @@ ko.bindingHandlers.attr.update = (element, value_accessor, all_bindings_accessor
     value
   original_update(element, new_value_accessor, all_bindings_accessor, view_model, binding_context)
 
+# used to insert html element nodes
 ko.virtualElements.allowedBindings.inject = true
 ko.bindingHandlers.inject =
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
@@ -60,10 +61,23 @@ ko.bindingHandlers.inject =
     ko.virtualElements.setDomNodeChildren(element, nodes)
     return {controlsDescendantBindings: true}
 
-ko.virtualElements.allowedBindings.wrap = true
-ko.bindingHandlers.wrap =
+# used to extend the binding context by alias
+ko.virtualElements.allowedBindings.alias = true
+ko.bindingHandlers.alias =
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    alias = all_bindings_accessor().as or '$data'
-    context = binding_context.extend({"#{alias}": ko.unwrap(value_accessor())})
+    obsv = ko.observable(ko.unwrap(value_accessor()))
+    ko.utils.domData.set(element, 'alias_observable', obsv)
+    alias = all_bindings_accessor().as or '$alias'
+    context = binding_context.extend({"#{alias}": obsv})
     ko.applyBindingsToDescendants(context, element)
     return {controlsDescendantBindings: true}
+
+  update: (element, value_accessor) ->
+    unless subscription
+      ko.utils.domNodeDisposal.addDisposeCallback element, -> subscription?.dispose()
+    subscription?.dispose()
+    (obsv = ko.utils.domData.get(element, 'alias_observable'))(ko.unwrap(val = value_accessor()))
+     # update obsv
+    if ko.isObservable(val)
+      subscription = val.subscribe (val) -> obsv.notifySubscribers(val)
+
