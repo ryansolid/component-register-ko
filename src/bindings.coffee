@@ -61,23 +61,26 @@ ko.bindingHandlers.inject =
     ko.virtualElements.setDomNodeChildren(element, nodes)
     return {controlsDescendantBindings: true}
 
-# used to extend the binding context by alias
-ko.virtualElements.allowedBindings.alias = true
-ko.bindingHandlers.alias =
+# similar to with but doesn't redraw all nodes
+ko.virtualElements.allowedBindings.use = true
+ko.bindingHandlers.use =
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    obsv = ko.observable(ko.unwrap(value_accessor()))
-    ko.utils.domData.set(element, 'alias_observable', obsv)
-    alias = all_bindings_accessor().as or '$alias'
-    context = binding_context.extend({"#{alias}": obsv})
-    ko.applyBindingsToDescendants(context, element)
+    template_nodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true)
+    needs_bind = true
+    obsv = ko.observable()
+    ko.computed(->
+      value = value_accessor()
+      data = ko.unwrap(value)
+      if data
+        obsv(data)
+        if needs_bind
+          ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(template_nodes));
+          extend = all_bindings_accessor().extend or {}
+          context = binding_context.createChildContext obsv, null, (context) -> ko.utils.extend(context, extend)
+          ko.applyBindingsToDescendants(context, element)
+          needs_bind = false
+      else
+        ko.virtualElements.emptyNode(element);
+        needs_bind = true
+    , null, {disposeWhenNodeIsRemoved: element}).extend({notify: 'always'})
     return {controlsDescendantBindings: true}
-
-  update: (element, value_accessor) ->
-    unless subscription
-      ko.utils.domNodeDisposal.addDisposeCallback element, -> subscription?.dispose()
-    subscription?.dispose()
-    (obsv = ko.utils.domData.get(element, 'alias_observable'))(ko.unwrap(val = value_accessor()))
-     # update obsv
-    if ko.isObservable(val)
-      subscription = val.subscribe (val) -> obsv.notifySubscribers(val)
-

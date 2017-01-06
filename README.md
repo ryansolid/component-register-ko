@@ -9,7 +9,8 @@ Some key extras:
 * Reference cleanup functionality
 * Explicit computed sync mechanism
 * Inject binding as alternative to named slots to inject templates
-* Alias binding to extend the current context with custom properties. Useful for nested mapping.
+* Use binding for creating and extending binding context
 
 TODO: Write documentation
+
 TODO: Write tests
