@@ -49,7 +49,7 @@ original_update = ko.bindingHandlers.attr.update
 ko.bindingHandlers.attr.update = (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
   new_value_accessor = ->
     value = ko.unwrap(value_accessor());
-    value[k] = JSON.stringify(ko.unwrap(v)) for k, v of value when !Utils.isString(v)
+    value[k] = JSON.stringify(val) for k, v of value when (val = ko.unwrap(v)) and !Utils.isString(val)
     value
   original_update(element, new_value_accessor, all_bindings_accessor, view_model, binding_context)
 
