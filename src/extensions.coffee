@@ -1,8 +1,9 @@
 ko = require 'knockout'
 {Utils} = require 'component-register'
 LIFECYCLE_METHODS = ['dispose']
-
-# memory subscription cleanup
+###
+# Memory subscription cleanup
+###
 ko.isReleasable = (obj, depth=0) ->
   return false if (not obj or (obj isnt Object(obj))) or obj.__released # must be an object and not already released
   return true if ko.isObservable(obj) # a known type that is releasable
@@ -33,3 +34,41 @@ ko.releaseKeys = (obj) ->
   return
 
 ko.wasReleased = (obj) -> obj.__released
+
+###
+# Memory safe mapping function
+###
+ko.observable.fn.map = (options) ->
+  options = {map: options} if Utils.isFunction(options)
+  mapped = ko.pureComputed =>
+    value = if options.property then @()[options.property] else @()
+    unless value
+      ko.release(mapped.peek()) if mapped?.peek()
+      return
+    old_value = mapped?.peek()?._value
+    if Array.isArray(value)
+      values = value
+      values = values.filter(options.filter) if options.filter
+      values = values.sort(options.comparator) if options.comparator
+      if options.map
+        values = values.map (test) ->
+          return mapped_value if mapped_value = mapped?.peek()?.find (vm) -> vm._value is test
+          mapped_value = ko.ignoreDependencies => options.map(test)
+          mapped_value._value = test
+          return mapped_value
+      ko.release(to_release) if mapped?.peek() and (to_release = mapped.peek().filter((test) -> values.indexOf(test) is -1)).length
+      return values
+    else
+      if old_value
+        return mapped.peek() if value is old_value
+        ko.release(mapped.peek())
+      mapped_value = ko.ignoreDependencies => options.map(value)
+      mapped_value._value = value
+      return mapped_value
+
+  mapped.source = @
+  og_dispose = mapped.dispose
+  mapped.dispose = ->
+    ko.release(@peek())
+    og_dispose.call(@)
+  mapped

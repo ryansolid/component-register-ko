@@ -7,9 +7,11 @@ Some key extras:
 * React like syntax from the preprocessor (for non control flow bindings).
 * Update attr binding to default to JSON.stringify javascript objects
 * Reference cleanup functionality
+* Observable mapping observable fn
 * Explicit computed sync mechanism
 * Inject binding as alternative to named slots to inject templates
 * Use binding for creating and extending binding context
+* Ref binding to extract HTML element (to avoid necessity of custom bindings or spaghetti selectors)
 
 TODO: Write documentation
 

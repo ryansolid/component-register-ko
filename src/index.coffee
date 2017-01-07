@@ -20,7 +20,9 @@ module.exports = class KOComponent extends Component
 
     @addReleaseCallback => ko.releaseKeys(@)
 
+  ###
   # element property change default handler
+  ###
   onPropertyChange: (name, val) =>
     return @props[name] = val if Utils.isFunction(val)
     @props[name]?(val)
@@ -28,8 +30,10 @@ module.exports = class KOComponent extends Component
   bindDom: (node, data) -> ko.applyBindings(data, node)
   unbindDom: (node) -> ko.cleanNode(node)
 
+  ###
   # To avoid top level assertions between comment tags we must add a container
   # current shortcoming of polyfill
+  ###
   renderTemplate: (template, context={}) =>
     el = container = document.createElement('div')
     el.innerHTML = template
@@ -39,7 +43,9 @@ module.exports = class KOComponent extends Component
     @bindDom(container, context)
     return el.childNodes
 
+  ###
   # knockout explicit memory safe computed for synchronizing values
+  ###
   sync: (observables..., callback) =>
     comp = ko.computed ->
       args = []

@@ -1,7 +1,9 @@
 ko = require 'knockout'
 {Registry, Utils} = require 'component-register'
 
+###
 # these override the standard binding providers to autobind our components
+###
 _getBindingAccessors = ko.bindingProvider.instance.getBindingAccessors
 ko.bindingProvider.instance.getBindingAccessors = (node) ->
   bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
@@ -12,7 +14,9 @@ _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
   return !!Registry[Utils.toComponentName(node?.tagName)] or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
+###
 # main component binding
+###
 ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value']
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
@@ -22,7 +26,9 @@ ko.bindingHandlers.bindComponent =
     , 0
     return {controlsDescendantBindings: true}
 
+###
 # used to bind to element properties
+###
 ko.bindingHandlers.prop =
   init: (element, valueAccessor) ->
     setTimeout ->
@@ -44,7 +50,16 @@ ko.bindingHandlers.prop =
       , null, {disposeWhenNodeIsRemoved: element}
     , 0
 
+###
+# Grabs element reference
+###
+ko.bindingHandlers.ref =
+  after: ['prop', 'attr', 'value', 'checked', 'bindComponent']
+  init: (element, valueAccessor) -> setTimeout (-> valueAccessor()(element)), 0
+
+###
 # Update attr binding to serialize to JSON
+###
 original_update = ko.bindingHandlers.attr.update
 ko.bindingHandlers.attr.update = (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
   new_value_accessor = ->
@@ -53,7 +68,9 @@ ko.bindingHandlers.attr.update = (element, value_accessor, all_bindings_accessor
     value
   original_update(element, new_value_accessor, all_bindings_accessor, view_model, binding_context)
 
+###
 # used to insert html element nodes
+###
 ko.virtualElements.allowedBindings.inject = true
 ko.bindingHandlers.inject =
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
@@ -61,7 +78,9 @@ ko.bindingHandlers.inject =
     ko.virtualElements.setDomNodeChildren(element, nodes)
     return {controlsDescendantBindings: true}
 
-# similar to with but doesn't redraw all nodes
+###
+# similar to with but doesn't redraw all child nodes
+###
 ko.virtualElements.allowedBindings.use = true
 ko.bindingHandlers.use =
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->

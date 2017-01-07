@@ -1,9 +1,10 @@
 ko = require 'knockout'
 {Registry, Utils} = require 'component-register'
 
-### Based on knockout.punches and altered to handle prop binding and not generic bindings
+###
+# Based on knockout.punches and altered to handle prop binding
 # Currently supports attr, prop, and text bindings using { } syntax.
-# value, css(as class), event(as on*), checked bindings are also pushed to attributes
+# value, css(as class), event(as on*), checked, and ref bindings are also pushed to attributes
 ###
 
 parseInterpolationMarkup = (textToParse, outerTextCallback, expressionCallback) ->
@@ -29,9 +30,16 @@ trim = (string) ->
 wrapExpression = (expressionText, node) ->
   ownerDocument = if node then node.ownerDocument else document
   result = []
-  result.push ownerDocument.createComment('ko ' + 'text:' + trim(expressionText))
+  result.push ownerDocument.createComment('ko ' + 'text: ' + trim(expressionText))
   result.push ownerDocument.createComment('/ko')
   result
+
+#TODO: find better way to find handlebar-less object notation, not or statement
+isObjectNotation = (str) ->
+  return false if str[0] is '{'
+  c = str.length - str.replace(/:/g, '').length
+  q = str.length - str.replace(/\?/g, '').length
+  c > 0 and c > q
 
 ko.bindingProvider.instance.preprocessNode = (node) ->
   if node.nodeType == 1 and node.attributes.length
@@ -55,11 +63,13 @@ ko.bindingProvider.instance.preprocessNode = (node) ->
       if parts.length > 1
         attr_value = '""+' + parts.join('+')
       if attr_value
-        if attr.name in ['class', 'value', 'checked'] or (attr.name.indexOf('on') is 0 and not node.lookupProp?(attr.name))
+        if attr.name in ['class', 'value', 'checked', 'ref'] or (attr.name.indexOf('on') is 0 and not node.lookupProp?(attr.name))
           switch attr.name
             when 'class'
-              binding.push("css: #{attr_value}")
-            when 'value', 'checked'
+              if isObjectNotation(attr_value)
+                binding.push("css: {#{attr_value}}")
+              else binding.push("css: #{attr_value}")
+            when 'value', 'checked', 'ref'
               binding.push("#{attr.name}: #{attr_value}")
             else
               event_list.push("#{attr.name[2..]}: #{attr_value}")
