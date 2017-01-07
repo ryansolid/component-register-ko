@@ -75,7 +75,9 @@ ko.bindingProvider.instance.preprocessNode = (node) ->
               event_list.push("#{attr.name[2..]}: #{attr_value}")
         else
           attr_name = node.lookupProp?(attr.name) or attr.name
-          attr_list.push("#{attr_name}: #{attr_value}")
+          if isObjectNotation(attr_value)
+            attr_list.push("#{attr_name}: {#{attr_value}}")
+          else attr_list.push("#{attr_name}: #{attr_value}")
         node.removeAttribute attr.name
 
     if attr_list.length

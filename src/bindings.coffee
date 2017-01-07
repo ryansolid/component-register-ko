@@ -78,6 +78,11 @@ ko.bindingHandlers.inject =
     ko.virtualElements.setDomNodeChildren(element, nodes)
     return {controlsDescendantBindings: true}
 
+isFalsy = (data) ->
+  return true unless data
+  return true if Utils.isObject(data) and 'length' of data and not data.length
+  false
+
 ###
 # similar to with but doesn't redraw all child nodes
 ###
@@ -90,7 +95,7 @@ ko.bindingHandlers.use =
     ko.computed(->
       value = value_accessor()
       data = ko.unwrap(value)
-      if data
+      unless isFalsy(data)
         obsv(data)
         if needs_bind
           ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(template_nodes));
@@ -103,3 +108,40 @@ ko.bindingHandlers.use =
         needs_bind = true
     , null, {disposeWhenNodeIsRemoved: element}).extend({notify: 'always'})
     return {controlsDescendantBindings: true}
+
+###
+# update if/ifnot/with to check array length as falsy condition
+###
+makeWithIfBinding = (bindingKey, isWith, isNot, makeContextCallback) ->
+  ko.bindingHandlers[bindingKey] = 'init': (element, valueAccessor, allBindings, viewModel, bindingContext) ->
+    didDisplayOnLastUpdate = undefined
+    savedNodes = undefined
+    ko.computed (->
+      rawValue = valueAccessor()
+      dataValue = ko.utils.unwrapObservable(rawValue)
+      shouldDisplay = !isNot != isFalsy(dataValue)
+      isFirstRender = !savedNodes
+      needsRefresh = isFirstRender or isWith or shouldDisplay != didDisplayOnLastUpdate
+      if needsRefresh
+        # Save a copy of the inner nodes on the initial update, but only if we have dependencies.
+        if isFirstRender and ko.computedContext.getDependenciesCount()
+          savedNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true)
+        if shouldDisplay
+          if !isFirstRender
+            ko.virtualElements.setDomNodeChildren element, ko.utils.cloneNodes(savedNodes)
+          ko.applyBindingsToDescendants (if makeContextCallback then makeContextCallback(bindingContext, rawValue) else bindingContext), element
+        else
+          ko.virtualElements.emptyNode element
+        didDisplayOnLastUpdate = shouldDisplay
+      return
+    ), null, disposeWhenNodeIsRemoved: element
+    { 'controlsDescendantBindings': true }
+  ko.expressionRewriting.bindingRewriteValidators[bindingKey] = false
+  # Can't rewrite control flow bindings
+  ko.virtualElements.allowedBindings[bindingKey] = true
+  return
+
+makeWithIfBinding('if')
+makeWithIfBinding('ifnot', false, true)
+makeWithIfBinding 'with', true, false, (bindingContext, dataValue) ->
+  bindingContext.createStaticChildContext dataValue
