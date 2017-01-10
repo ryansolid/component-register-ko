@@ -51,34 +51,41 @@ ko.bindingProvider.instance.preprocessNode = (node) ->
     for attr in attrs when attr.specified and attr.name != 'data-bind' and attr.value.indexOf('{') != -1
       parts = []
       attr_value = ''
+      class_applied = ''
 
       addText = (text) -> parts.push('"' + text.replace(/"/g, '\"') + '"') if text
 
       addExpr = (expression_text) ->
         if expression_text
           attr_value = expression_text
-          parts.push('ko.unwrap(' + expression_text + ')')
+          if isObjectNotation(expression_text) or (braced = expression_text.indexOf('{') is 0)
+            attr_value = '{' + expression_text + '}' unless braced
+            parts.push(attr_value)
+          else
+            parts.push('ko.unwrap(' + expression_text + ')')
 
       parseInterpolationMarkup attr.value, addText, addExpr
       if parts.length > 1
-        attr_value = '""+' + parts.join('+')
+        if attr.name is 'class'
+          for p in parts
+            if p.indexOf('{') is 0 then attr_value = p
+            else class_applied += p.replace(/"/g, '').trim() + ' '
+          node.setAttribute('class', class_applied.trim())
+        else
+          attr_value = '""+' + parts.join('+')
       if attr_value
         if attr.name in ['class', 'value', 'checked', 'ref'] or (attr.name.indexOf('on') is 0 and not node.lookupProp?(attr.name))
           switch attr.name
             when 'class'
-              if isObjectNotation(attr_value)
-                binding.push("css: {#{attr_value}}")
-              else binding.push("css: #{attr_value}")
+              binding.push("css: #{attr_value}")
             when 'value', 'checked', 'ref'
               binding.push("#{attr.name}: #{attr_value}")
             else
               event_list.push("#{attr.name[2..]}: #{attr_value}")
         else
           attr_name = node.lookupProp?(attr.name) or attr.name
-          if isObjectNotation(attr_value)
-            attr_list.push("#{attr_name}: {#{attr_value}}")
-          else attr_list.push("#{attr_name}: #{attr_value}")
-        node.removeAttribute attr.name
+          attr_list.push("#{attr_name}: #{attr_value}")
+        node.removeAttribute attr.name unless class_applied.length
 
     if attr_list.length
       binding_name = if !!Registry[Utils.toComponentName(node?.tagName)] then 'prop' else 'attr'
