@@ -7,7 +7,7 @@ ko = require 'knockout'
 _getBindingAccessors = ko.bindingProvider.instance.getBindingAccessors
 ko.bindingProvider.instance.getBindingAccessors = (node) ->
   bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
-  bindings.bindComponent = true if Registry[Utils.toComponentName(node?.tagName)]
+  bindings.bindComponent = (-> true) if Registry[Utils.toComponentName(node?.tagName)]
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
@@ -18,12 +18,15 @@ ko.bindingProvider.instance.nodeHasBindings = (node) ->
 # main component binding
 ###
 ko.bindingHandlers.bindComponent =
-  after: ['prop', 'attr', 'value']
+  after: ['prop', 'attr', 'value', 'checked']
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    setTimeout ->
+    bind = ->
       element.boundCallback?()
+      # set ref is present
+      ref(element) if ref = all_bindings_accessor().ref
       ko.applyBindingsToDescendants(binding_context, element)
-    , 0
+    if element.boundCallback? then bind()
+    else setTimeout bind, 0
     return {controlsDescendantBindings: true}
 
 ###
@@ -31,7 +34,7 @@ ko.bindingHandlers.bindComponent =
 ###
 ko.bindingHandlers.prop =
   init: (element, valueAccessor) ->
-    setTimeout ->
+    bind = ->
       props = element.__component_type.props
       for k, v in props when v.notify
         do (k, v) -> ko.utils.registerEventHandler element, v.event_name, (event) ->
@@ -40,22 +43,25 @@ ko.bindingHandlers.prop =
           obsv(event.detail)
       ko.computed ->
         return if element.__released
-        for k, v of valueAccessor() when k of props
+        for k, v of valueAccessor() when key = element.lookupProp(k)
           value = ko.unwrap(v)
           value = null unless value?
           # always update arrays, consider better way. Cloning arrays and comparing values?
-          continue if element[k] is value and not Array.isArray(element[k])
-          element[k] = value
+          continue if element[key] is value and not Array.isArray(element[key])
+          element[key] = value
         return
       , null, {disposeWhenNodeIsRemoved: element}
-    , 0
+    if element.boundCallback? then bind()
+    else setTimeout bind, 0
 
 ###
-# Grabs element reference
+# Grabs element reference for non-components
 ###
 ko.bindingHandlers.ref =
-  after: ['prop', 'attr', 'value', 'checked', 'bindComponent']
-  init: (element, valueAccessor) -> setTimeout (-> valueAccessor()(element)), 0
+  after: ['attr', 'value', 'checked']
+  init: (element, value_accessor, all_bindings_accessor) ->
+    return if all_bindings_accessor().bindComponent
+    value_accessor()(element)
 
 ###
 # Update attr binding to serialize to JSON
