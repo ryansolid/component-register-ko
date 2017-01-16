@@ -68,7 +68,7 @@ ko.bindingProvider.instance.preprocessNode = (node) ->
       if parts.length > 1
         if attr.name is 'class'
           for p in parts
-            if p.indexOf('{') is 0 then attr_value = p
+            if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
             else class_applied += p.replace(/"/g, '').trim() + ' '
           node.setAttribute('class', class_applied.trim())
         else
