@@ -81,6 +81,8 @@ ko.bindingProvider.instance.preprocessNode = (node) ->
             when 'value', 'checked', 'ref'
               binding.push("#{attr.name}: #{attr_value}")
             else
+              # clear event property
+              node[attr.name] = null
               event_list.push("#{attr.name[2..]}: #{attr_value}")
         else
           attr_name = node.lookupProp?(attr.name) or attr.name
