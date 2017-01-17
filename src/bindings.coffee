@@ -7,12 +7,16 @@ ko = require 'knockout'
 _getBindingAccessors = ko.bindingProvider.instance.getBindingAccessors
 ko.bindingProvider.instance.getBindingAccessors = (node) ->
   bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
-  bindings.bindComponent = (-> true) if Registry[Utils.toComponentName(node?.tagName)]
+  if Registry[Utils.toComponentName(node?.tagName)]
+    bindings.bindComponent = (-> true)
+  else if node.hasAttribute?('data-root')
+    bindings.stopBinding = (-> true)
+  bindings.slot = (-> true) if node.nodeName is "SLOT"
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return !!Registry[Utils.toComponentName(node?.tagName)] or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
+  return !!Registry[Utils.toComponentName(node?.tagName)] or node.nodeName is 'SLOT' or node.hasAttribute?('data-root') or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # main component binding
@@ -24,7 +28,12 @@ ko.bindingHandlers.bindComponent =
       element.boundCallback?()
       # set ref is present
       ref(element) if ref = all_bindings_accessor().ref
-      ko.applyBindingsToDescendants(binding_context, element)
+      if Utils.useShadowDOM
+        ko.applyBindingsToDescendants(binding_context, element)
+      else
+        inner_context = new ko.bindingContext element.__component, null, null, (context) -> ko.utils.extend(context, {$outerContext: binding_context})
+        ko.applyBindingsToDescendants(inner_context, element)
+
     if element.boundCallback? then bind()
     else setTimeout bind, 0
     return {controlsDescendantBindings: true}
@@ -53,6 +62,22 @@ ko.bindingHandlers.prop =
       , null, {disposeWhenNodeIsRemoved: element}
     if element.boundCallback? then bind()
     else setTimeout bind, 0
+
+###
+# Slot binding to handle context change when not using shadowdom
+###
+ko.bindingHandlers.slot =
+  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
+    setTimeout ->
+      ko.applyBindingsToDescendants(binding_context.$outerContext, element)
+    , 0
+    return {controlsDescendantBindings: true}
+
+###
+# stops binding
+###
+ko.bindingHandlers.stopBinding =
+  init: (element) -> return {controlsDescendantBindings: true}
 
 ###
 # Grabs element reference for non-components
@@ -105,8 +130,7 @@ ko.bindingHandlers.use =
         obsv(data)
         if needs_bind
           ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(template_nodes));
-          extend = all_bindings_accessor().extend or {}
-          context = binding_context.createChildContext obsv, null, (context) -> ko.utils.extend(context, extend)
+          context = binding_context.createChildContext(obsv)
           ko.applyBindingsToDescendants(context, element)
           needs_bind = false
       else
