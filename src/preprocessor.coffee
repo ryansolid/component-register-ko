@@ -7,6 +7,9 @@ ko = require 'knockout'
 # value, css(as class), event(as on*), checked, and ref bindings are also pushed to attributes
 ###
 
+# required since IE preparses style attribute
+STYLE_ALIAS = 'inline-style'
+
 parseInterpolationMarkup = (textToParse, outerTextCallback, expressionCallback) ->
   outerMatch = textToParse.match(/^([\s\S]*?)\{([\s\S]*)}([\s\S]*)$/)
 
@@ -83,9 +86,13 @@ ko.bindingProvider.instance.preprocessNode = (node) ->
             else
               # clear event property
               node[attr.name] = null
+              # wrap event callbacks
+              # if /^([$_a-z][$\w]*|.+(\.\s*[$_a-z][$\w]*|\[.+\]))$/i.test(attr_value)
+              #   attr_value = 'function(_x,_y,_z){return(' + attr_value + ')(_x,_y,_z);}';
               event_list.push("#{attr.name[2..]}: #{attr_value}")
         else
           attr_name = node.lookupProp?(attr.name) or attr.name
+          attr_name = 'style' if attr.name is STYLE_ALIAS
           attr_list.push("#{attr_name}: #{attr_value}")
         node.removeAttribute attr.name unless class_applied.length
 

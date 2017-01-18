@@ -123,7 +123,7 @@ ko.bindingHandlers.use =
     template_nodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true)
     needs_bind = true
     obsv = ko.observable()
-    ko.computed(->
+    ko.computed ->
       value = value_accessor()
       data = ko.unwrap(value)
       unless isFalsy(data)
@@ -136,7 +136,7 @@ ko.bindingHandlers.use =
       else
         ko.virtualElements.emptyNode(element);
         needs_bind = true
-    , null, {disposeWhenNodeIsRemoved: element}).extend({notify: 'always'})
+    , null, {disposeWhenNodeIsRemoved: element}
     return {controlsDescendantBindings: true}
 
 ###

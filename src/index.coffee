@@ -40,7 +40,7 @@ module.exports = class KOComponent extends Component
     if el.childNodes.length > 1
       el = document.createElement('div')
       el.appendChild(container)
-    @bindDom(container, context)
+    @bindDom(el.firstChild, context)
     return el.childNodes
 
   ###
