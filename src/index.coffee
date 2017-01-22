@@ -31,19 +31,6 @@ module.exports = class KOComponent extends Component
   unbindDom: (node) -> ko.cleanNode(node)
 
   ###
-  # To avoid top level assertions between comment tags we must add a container
-  # current shortcoming of polyfill
-  ###
-  renderTemplate: (template, context={}) =>
-    el = container = document.createElement('div')
-    el.innerHTML = template
-    if el.childNodes.length > 1
-      el = document.createElement('div')
-      el.appendChild(container)
-    @bindDom(el.firstChild, context)
-    return el.childNodes
-
-  ###
   # knockout explicit memory safe computed for synchronizing values
   ###
   sync: (observables..., callback) =>
