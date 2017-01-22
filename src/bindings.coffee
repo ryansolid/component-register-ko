@@ -11,12 +11,12 @@ ko.bindingProvider.instance.getBindingAccessors = (node) ->
     bindings.bindComponent = (-> true)
   else if node.hasAttribute?('data-root')
     bindings.stopBinding = (-> true)
-  bindings.slot = (-> true) if node.nodeName is "SLOT" and node.__assigned
+  bindings.slot = (-> true) if node.nodeName is "SLOT" and node.hasAttribute('assigned')
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.__assigned) or node.hasAttribute?('data-root') or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
+  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.hasAttribute('assigned')) or node.hasAttribute?('data-root') or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # main component binding
@@ -45,7 +45,7 @@ ko.bindingHandlers.prop =
   init: (element, valueAccessor) ->
     bind = ->
       props = element.__component_type.props
-      for k, v in props when v.notify
+      for k, v of props when v.notify
         do (k, v) -> ko.utils.registerEventHandler element, v.event_name, (event) ->
           return unless event.target is element
           return unless (obsv = valueAccessor()[k]) and ko.isObservable(obsv)
