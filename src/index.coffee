@@ -1,7 +1,6 @@
 ko = require 'knockout'
 require './extensions'
 require './bindings'
-require './preprocessor'
 
 {Component, Utils} = require 'component-register'
 

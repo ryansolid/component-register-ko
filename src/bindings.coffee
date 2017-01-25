@@ -44,7 +44,7 @@ ko.bindingHandlers.bindComponent =
 ko.bindingHandlers.prop =
   init: (element, valueAccessor) ->
     bind = ->
-      props = element.__component_type.props
+      props = element.__component_type?.props or {}
       for k, v of props when v.notify
         do (k, v) -> ko.utils.registerEventHandler element, v.event_name, (event) ->
           return unless event.target is element
@@ -52,12 +52,19 @@ ko.bindingHandlers.prop =
           obsv(event.detail)
       ko.computed ->
         return if element.__released
-        for k, v of valueAccessor() when key = element.lookupProp(k)
+        for k, v of valueAccessor()
           value = ko.unwrap(v)
           value = null unless value?
-          # always update arrays, consider better way. Cloning arrays and comparing values?
-          continue if element[key] is value and not Array.isArray(element[key])
-          element[key] = value
+          if key = element.lookupProp?(k)
+            # always update arrays, consider better way. Cloning arrays and comparing values?
+            continue if element[key] is value and not Array.isArray(element[key])
+            element[key] = value
+          # attribute bind
+          else
+            if value
+              value = JSON.stringify(value) if !Utils.isString(value)
+              element.setAttribute(k, value)
+            else element.removeAttribute(k)
         return
       , null, {disposeWhenNodeIsRemoved: element}
     if element.boundCallback? then bind()
@@ -87,17 +94,6 @@ ko.bindingHandlers.ref =
   init: (element, value_accessor, all_bindings_accessor) ->
     return if all_bindings_accessor().bindComponent
     value_accessor()(element)
-
-###
-# Update attr binding to serialize to JSON
-###
-original_update = ko.bindingHandlers.attr.update
-ko.bindingHandlers.attr.update = (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-  new_value_accessor = ->
-    value = ko.unwrap(value_accessor());
-    value[k] = JSON.stringify(val) for k, v of value when (val = ko.unwrap(v)) and !Utils.isString(val)
-    value
-  original_update(element, new_value_accessor, all_bindings_accessor, view_model, binding_context)
 
 ###
 # used to insert html element nodes
