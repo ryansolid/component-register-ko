@@ -55,7 +55,7 @@ transformList = (nodes) ->
           attr_value = ''
           class_applied = ''
 
-          addText = (text) -> parts.push('"' + text.replace(/"/g, '\"') + '"') if text
+          addText = (text) -> parts.push("'" + text.replace(/"/g, '\"') + "'") if text
 
           addExpr = (expression_text) ->
             if expression_text
@@ -72,8 +72,8 @@ transformList = (nodes) ->
               for p in parts
                 if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
                 else class_applied += p.replace(/"/g, '').trim() + ' '
-              node.attr['class'] = class_applied.trim()
-            else attr_value = '""+' + parts.join('+')
+              node.attrs['class'] = class_applied.trim()
+            else attr_value = "''+" + parts.join('+')
           if attr_value
             if attr in ['class', 'value', 'checked', 'ref'] or attr.indexOf('on') is 0
               switch attr
