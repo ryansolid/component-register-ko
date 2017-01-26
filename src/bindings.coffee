@@ -48,11 +48,12 @@ ko.bindingHandlers.prop =
       for k, v of props when v.notify
         do (k, v) -> ko.utils.registerEventHandler element, v.event_name, (event) ->
           return unless event.target is element
-          return unless (obsv = valueAccessor()[k]) and ko.isObservable(obsv)
+          value = ko.unwrap(valueAccessor())
+          return unless (obsv = value[k] or value[v.attribute]) and ko.isObservable(obsv)
           obsv(event.detail)
       ko.computed ->
         return if element.__released
-        for k, v of valueAccessor()
+        for k, v of ko.unwrap(valueAccessor())
           value = ko.unwrap(v)
           value = null unless value?
           if key = element.lookupProp?(k)
