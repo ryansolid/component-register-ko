@@ -1,5 +1,5 @@
-parse = require './parse'
-stringify = require './stringify'
+parse = require 'component-register/lib/html/parse'
+stringify = require 'component-register/lib/html/stringify'
 
 ###
 # Based on knockout.punches and altered to handle prop binding
