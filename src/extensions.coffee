@@ -52,7 +52,7 @@ ko.wasReleased = (obj) -> obj.__released
 ko.observable.fn.map = (options) ->
   options = {map: options} if Utils.isFunction(options)
   mapped = ko.pureComputed =>
-    value = if options.property then @()[options.property] else @()
+    value = if options.property then @()?[options.property] else @()
     unless value
       ko.release(mapped.peek()) if mapped?.peek()
       return
