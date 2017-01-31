@@ -7,6 +7,7 @@ stringify = require 'component-register/lib/html/stringify'
 # Currently supports attr, prop, and text bindings using { } syntax.
 # value, css(as class), event(as on*), checked, and ref bindings are also pushed to attributes
 ###
+OBJECT_NOTATION = /^[^{(}(?]+:.+/g
 
 parseInterpolationMarkup = (textToParse, outerTextCallback, expressionCallback) ->
   outerMatch = textToParse.match(/^([\s\S]*?)\{([\s\S]*)}([\s\S]*)$/)
@@ -35,13 +36,6 @@ wrapExpression = (expression_text) ->
   result.push {type: 'comment', content: '/ko'}
   result
 
-#TODO: find better way to find handlebar-less object notation, not or statement
-isObjectNotation = (str) ->
-  return false if str[0] is '{'
-  c = str.length - str.replace(/:/g, '').length
-  q = str.length - str.replace(/\?/g, '').length
-  c > 0 and c > q
-
 transformList = (nodes) ->
   for node in nodes[..]
     switch node.type
@@ -60,7 +54,7 @@ transformList = (nodes) ->
           addExpr = (expression_text) ->
             if expression_text
               attr_value = expression_text
-              if isObjectNotation(expression_text) or (braced = expression_text.indexOf('{') is 0)
+              if OBJECT_NOTATION.test(expression_text) or (braced = expression_text.indexOf('{') is 0)
                 attr_value = '{' + expression_text + '}' unless braced
                 parts.push(attr_value)
               else
