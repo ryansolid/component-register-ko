@@ -52,7 +52,6 @@ ko.bindingHandlers.prop =
           return unless (obsv = value[k] or value[v.attribute]) and ko.isObservable(obsv)
           obsv(event.detail)
       ko.computed ->
-        return if element.__released
         for k, v of ko.unwrap(valueAccessor())
           value = ko.unwrap(v)
           value = null unless value?

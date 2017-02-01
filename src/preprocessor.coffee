@@ -7,7 +7,7 @@ stringify = require 'component-register/lib/html/stringify'
 # Currently supports attr, prop, and text bindings using { } syntax.
 # value, css(as class), event(as on*), checked, and ref bindings are also pushed to attributes
 ###
-OBJECT_NOTATION = /^[^{(}(?]+:.+/g
+OBJECT_NOTATION = /^[^{(}(?]+:.+/
 
 parseInterpolationMarkup = (textToParse, outerTextCallback, expressionCallback) ->
   outerMatch = textToParse.match(/^([\s\S]*?)\{([\s\S]*)}([\s\S]*)$/)
