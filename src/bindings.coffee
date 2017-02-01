@@ -50,15 +50,20 @@ ko.bindingHandlers.prop =
           return unless event.target is element
           value = ko.unwrap(valueAccessor())
           return unless (obsv = value[k] or value[v.attribute]) and ko.isObservable(obsv)
-          obsv(event.detail)
+          new_val = event.detail
+          new_val = new_val[..] if Array.isArray(new_val)
+          obsv(new_val)
       ko.computed ->
         for k, v of ko.unwrap(valueAccessor())
           value = ko.unwrap(v)
           value = null unless value?
           if key = element.lookupProp?(k)
-            # always update arrays, consider better way. Cloning arrays and comparing values?
-            continue if element[key] is value and not Array.isArray(element[key])
-            element[key] = value
+            if Array.isArray(value)
+              continue if Array.isArray(element[key]) and not Utils.arrayDiff(value, element[key])
+              element[key] = value[..]
+            else
+              continue if element[key] is value
+              element[key] = value
           # attribute bind
           else
             if value
