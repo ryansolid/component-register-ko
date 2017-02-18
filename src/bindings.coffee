@@ -101,6 +101,13 @@ ko.bindingHandlers.ref =
     value_accessor()(element)
 
 ###
+# sets the style.cssText property of an element, removes timing issue with binding to attribute
+###
+ko.bindingHandlers.csstext =
+  update: (element, value_accessor) ->
+    element.style.cssText = ko.unwrap(value_accessor())
+
+###
 # used to insert html element nodes
 ###
 ko.virtualElements.allowedBindings.inject = true

@@ -69,10 +69,12 @@ transformList = (nodes) ->
               node.attrs['class'] = class_applied.trim()
             else attr_value = "''+" + parts.join('+')
           if attr_value
-            if attr in ['class', 'value', 'checked', 'ref'] or attr.indexOf('on') is 0
+            if attr in ['class', 'value', 'checked', 'ref', 'style'] or attr.indexOf('on') is 0
               switch attr
                 when 'class'
                   binding.push("css: #{attr_value}")
+                when 'style'
+                  binding.push("csstext: #{attr_value}")
                 when 'value', 'checked', 'ref'
                   binding.push("#{attr}: #{attr_value}")
                 else
