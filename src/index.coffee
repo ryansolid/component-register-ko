@@ -26,8 +26,16 @@ module.exports = class KOComponent extends Component
     return @props[name] = val if Utils.isFunction(val)
     @props[name]?(val)
 
-  bindDom: (node, data) -> ko.applyBindings(data, node)
+  bindDom: (node, data) =>
+    return if @_dataFor(node)
+    ko.applyBindings(data, node)
+
   unbindDom: (node) -> ko.cleanNode(node)
+
+  _dataFor: (node) =>
+    return true if Object.keys(node).some((test)-> test.indexOf('__ko__') is 0)
+    return false if not node.parentNode or node.parentNode?.nodeName in Utils.excludeTags
+    @_dataFor(node.parentNode)
 
   ###
   # knockout explicit memory safe computed for synchronizing values

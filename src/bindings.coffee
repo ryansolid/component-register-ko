@@ -9,14 +9,14 @@ ko.bindingProvider.instance.getBindingAccessors = (node) ->
   bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
   if Registry[Utils.toComponentName(node?.tagName)]
     bindings.bindComponent = (-> true)
-  else if node.hasAttribute?('data-root')
+  else if node.nodeName in Utils.excludeTags
     bindings.stopBinding = (-> true)
   bindings.slot = (-> true) if node.nodeName is "SLOT" and node.hasAttribute('assigned')
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.hasAttribute('assigned')) or node.hasAttribute?('data-root') or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
+  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.hasAttribute('assigned')) or node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # main component binding
@@ -53,27 +53,28 @@ ko.bindingHandlers.prop =
           new_val = event.detail
           new_val = new_val[..] if Array.isArray(new_val)
           obsv(new_val)
-      ko.computed ->
-        for k, v of ko.unwrap(valueAccessor())
-          value = ko.unwrap(v)
-          value = null unless value?
-          if key = element.lookupProp?(k)
-            if Array.isArray(value)
-              continue if Array.isArray(element[key]) and not Utils.arrayDiff(value, element[key])
-              element[key] = value[..]
-            else
-              continue if element[key] is value
-              element[key] = value
-          # attribute bind
-          else
-            if value
-              value = JSON.stringify(value) if !Utils.isString(value)
-              element.setAttribute(k, value)
-            else element.removeAttribute(k)
-        return
-      , null, {disposeWhenNodeIsRemoved: element}
-    if element.boundCallback? then bind()
+    if element.__component_type? then bind()
     else setTimeout bind, 0
+    ko.computed ->
+      for k, v of ko.unwrap(valueAccessor())
+        value = ko.unwrap(v)
+        value = null unless value?
+        if Utils.isObject(value)
+          key = Utils.toProperty(k)
+          if Array.isArray(value)
+            continue if Array.isArray(element[key]) and not Utils.arrayDiff(value, element[key])
+            element[key] = value[..]
+          else
+            continue if element[key] is value
+            element[key] = value
+        # attribute bind
+        else
+          if value
+            value = JSON.stringify(value) if !Utils.isString(value)
+            element.setAttribute(k, value)
+          else element.removeAttribute(k)
+      return
+    , null, {disposeWhenNodeIsRemoved: element}
 
 ###
 # Slot binding to handle context change when not using shadowdom
