@@ -11,12 +11,11 @@ ko.bindingProvider.instance.getBindingAccessors = (node) ->
     bindings.bindComponent = (-> true)
   else if node.nodeName in Utils.excludeTags
     bindings.stopBinding = (-> true)
-  bindings.slot = (-> true) if node.nodeName is "SLOT" and node.hasAttribute('assigned')
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.hasAttribute('assigned')) or node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
+  return !!Registry[Utils.toComponentName(node?.tagName)] or node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # main component binding
@@ -24,37 +23,26 @@ ko.bindingProvider.instance.nodeHasBindings = (node) ->
 ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value', 'checked']
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    bind = ->
+    setTimeout ->
       element.boundCallback?()
-      # set ref is present
       ref(element) if ref = all_bindings_accessor().ref
-      if Utils.useShadowDOM
-        ko.applyBindingsToDescendants(binding_context, element)
-      else
-        inner_context = new ko.bindingContext element.__component, null, null, (context) -> ko.utils.extend(context, {$outerContext: binding_context})
-        ko.applyBindingsToDescendants(inner_context, element)
-
-    if element.boundCallback? then bind()
-    else setTimeout bind, 0
-    return {controlsDescendantBindings: true}
+      element.style.visibility = ''
+    , 0
+    element.style.visibility = 'hidden'
 
 ###
 # used to bind to element properties
 ###
 ko.bindingHandlers.prop =
   init: (element, valueAccessor) ->
-    bind = ->
-      props = element.__component_type?.props or {}
-      for k, v of props when v.notify
-        do (k, v) -> ko.utils.registerEventHandler element, v.event_name, (event) ->
-          return unless event.target is element
-          value = ko.unwrap(valueAccessor())
-          return unless (obsv = value[k] or value[v.attribute]) and ko.isObservable(obsv)
-          new_val = event.detail
-          new_val = new_val[..] if Array.isArray(new_val)
-          obsv(new_val)
-    if element.__component_type? then bind()
-    else setTimeout bind, 0
+    ko.utils.registerEventHandler element, 'propertychange', (event) ->
+      return unless event.target is element
+      value = ko.unwrap(valueAccessor())
+      name = event.detail.name
+      return unless (obsv = value[name] or value[Utils.toAttribute(name)]) and ko.isObservable(obsv)
+      new_val = event.detail.value
+      new_val = new_val[..] if Array.isArray(new_val)
+      obsv(new_val)
     ko.computed ->
       for k, v of ko.unwrap(valueAccessor())
         value = ko.unwrap(v)
@@ -64,27 +52,20 @@ ko.bindingHandlers.prop =
           if Array.isArray(value)
             continue if Array.isArray(element[key]) and not Utils.arrayDiff(value, element[key])
             element[key] = value[..]
-          else
-            continue if element[key] is value
-            element[key] = value
+            continue
+          continue if element[key] is value
+          element[key] = value
+          continue
         # attribute bind
-        else
-          if value
-            value = JSON.stringify(value) if !Utils.isString(value)
-            element.setAttribute(k, value)
-          else element.removeAttribute(k)
+        if value
+          value = JSON.stringify(value) if !Utils.isString(value)
+          continue if element.getAttribute(k) is value
+          element.setAttribute(k, value)
+          continue
+        element.setAttribute(k, null)
+        element.removeAttribute(k)
       return
     , null, {disposeWhenNodeIsRemoved: element}
-
-###
-# Slot binding to handle context change when not using shadowdom
-###
-ko.bindingHandlers.slot =
-  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    setTimeout ->
-      ko.applyBindingsToDescendants(binding_context.$outerContext, element)
-    , 0
-    return {controlsDescendantBindings: true}
 
 ###
 # stops binding
@@ -107,16 +88,6 @@ ko.bindingHandlers.ref =
 ko.bindingHandlers.csstext =
   update: (element, value_accessor) ->
     element.style.cssText = ko.unwrap(value_accessor())
-
-###
-# used to insert html element nodes
-###
-ko.virtualElements.allowedBindings.inject = true
-ko.bindingHandlers.inject =
-  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    return unless nodes = value_accessor()(binding_context.$rawData, binding_context.$index())
-    ko.virtualElements.setDomNodeChildren(element, nodes)
-    return {controlsDescendantBindings: true}
 
 isFalsy = (data) ->
   return true unless data

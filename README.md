@@ -8,7 +8,6 @@ Some key extras:
 * Reference cleanup functionality
 * Observable mapping observable fn
 * Explicit computed sync mechanism
-* Inject binding as alternative to named slots to inject templates
 * Use binding for creating binding context (essentially with binding without forced redraw)
 * Ref binding to extract HTML element (to avoid necessity of custom bindings or spaghetti selectors)
 
