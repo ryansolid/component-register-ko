@@ -63,7 +63,6 @@ ko.bindingHandlers.prop =
           element.setAttribute(k, value)
           continue
         element.setAttribute(k, null)
-        element.removeAttribute(k)
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
