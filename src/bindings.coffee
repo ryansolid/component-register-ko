@@ -62,7 +62,8 @@ ko.bindingHandlers.prop =
           continue if element.getAttribute(k) is value
           element.setAttribute(k, value)
           continue
-        element.setAttribute(k, null)
+        # set as a string for ie compatibility
+        element.setAttribute(k, 'null')
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
