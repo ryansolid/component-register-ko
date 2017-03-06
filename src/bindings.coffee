@@ -11,24 +11,30 @@ ko.bindingProvider.instance.getBindingAccessors = (node) ->
     bindings.bindComponent = (-> true)
   else if node.nodeName in Utils.excludeTags
     bindings.stopBinding = (-> true)
+  else if node.nodeName is "SLOT" and node.hasAttribute('assigned')
+    bindings.slot = (-> true)
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return !!Registry[Utils.toComponentName(node?.tagName)] or node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
+  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.hasAttribute('assigned')) or node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # main component binding
 ###
 ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value', 'checked']
-  init: (element, value_accessor, all_bindings_accessor) ->
-    Utils.scheduleMicroTask ->
-      try
-        element.boundCallback()
-      catch err
-        console.error err
-      ref(element) if ref = all_bindings_accessor().ref
+  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
+    try
+      element.boundCallback(binding_context)
+    catch err
+      console.error err
+    ref(element) if ref = all_bindings_accessor().ref
+    unless Utils.useShadowDOM
+      inner_context = new ko.bindingContext element.__component, null, null, (context) -> ko.utils.extend(context, {$outerContext: binding_context})
+      Utils.scheduleMicroTask ->
+        ko.applyBindingsToDescendants(inner_context, element)
+    return {controlsDescendantBindings: true} unless Utils.useShadowDOM
 
 ###
 # used to bind to element properties
@@ -66,6 +72,14 @@ ko.bindingHandlers.prop =
         element.setAttribute(k, 'null')
       return
     , null, {disposeWhenNodeIsRemoved: element}
+
+###
+# Slot binding to handle context change when not using shadowdom
+###
+ko.bindingHandlers.slot =
+  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
+    ko.applyBindingsToDescendants(binding_context.$outerContext, element)
+    return {controlsDescendantBindings: true}
 
 ###
 # stops binding
