@@ -22,13 +22,13 @@ ko.bindingProvider.instance.nodeHasBindings = (node) ->
 ###
 ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value', 'checked']
-  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    setTimeout ->
-      element.boundCallback?()
+  init: (element, value_accessor, all_bindings_accessor) ->
+    Utils.scheduleMicroTask ->
+      try
+        element.boundCallback()
+      catch err
+        console.error err
       ref(element) if ref = all_bindings_accessor().ref
-      element.style.visibility = ''
-    , 0
-    element.style.visibility = 'hidden'
 
 ###
 # used to bind to element properties
