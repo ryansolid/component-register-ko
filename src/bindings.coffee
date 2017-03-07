@@ -63,13 +63,14 @@ ko.bindingHandlers.prop =
           element[key] = value
           continue
         # attribute bind
+        key = Utils.toAttribute(k)
         if value
           value = JSON.stringify(value) if !Utils.isString(value)
-          continue if element.getAttribute(k) is value
-          element.setAttribute(k, value)
+          continue if element.getAttribute(key) is value
+          element.setAttribute(key, value)
           continue
         # set as a string for ie compatibility
-        element.setAttribute(k, 'null')
+        element.setAttribute(key, 'null')
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
