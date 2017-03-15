@@ -29,12 +29,13 @@ ko.bindingHandlers.bindComponent =
       element.boundCallback(binding_context)
     catch err
       console.error err
-    ref(element) if ref = all_bindings_accessor().ref
-    unless Utils.useShadowDOM
-      inner_context = new ko.bindingContext element.__component, null, null, (context) -> ko.utils.extend(context, {$outerContext: binding_context})
-      Utils.scheduleMicroTask ->
-        ko.applyBindingsToDescendants(inner_context, element)
-    return {controlsDescendantBindings: true} unless Utils.useShadowDOM
+
+    return if Utils.useShadowDOM
+    inner_context = new ko.bindingContext element.__component, null, null, (context) ->
+      ko.utils.extend(context, {$outerContext: binding_context})
+    Utils.scheduleMicroTask ->
+      ko.applyBindingsToDescendants(inner_context, element)
+    return {controlsDescendantBindings: true}
 
 ###
 # used to bind to element properties
@@ -69,8 +70,7 @@ ko.bindingHandlers.prop =
           continue if element.getAttribute(key) is value
           element.setAttribute(key, value)
           continue
-        # set as a string for ie compatibility
-        element.setAttribute(key, 'null')
+        element.removeAttribute(key)
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
@@ -92,9 +92,8 @@ ko.bindingHandlers.stopBinding =
 # Grabs element reference for non-components
 ###
 ko.bindingHandlers.ref =
-  after: ['attr', 'value', 'checked']
+  after: ['prop', 'attr', 'value', 'checked', 'bindComponent']
   init: (element, value_accessor, all_bindings_accessor) ->
-    return if all_bindings_accessor().bindComponent
     value_accessor()(element)
 
 ###
