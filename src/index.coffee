@@ -26,9 +26,7 @@ module.exports = class KOComponent extends Component
   ###
   # element property change default handler
   ###
-  onPropertyChange: (name, val) =>
-    return @props[name] = val if Utils.isFunction(val)
-    @props[name]?(val)
+  onPropertyChange: (name, val) => @props[name] = val
 
   bindDom: (node, data) =>
     return if @_dataFor(node)
@@ -45,21 +43,25 @@ module.exports = class KOComponent extends Component
   # knockout-es5 wrapper
   ###
   @custom_wrappers: new Map()
-  observe: (fields) =>
-    for key in fields when not ko.isObservable(@[key])
-      unless @[key]?
-        @[key] = null
-        continue
-      if Utils.isFunction(@[key])
-        @[key] = ko.pureComputed(@[key])
+  bind: (context, field) =>
+    if arguments.length is 1
+      field = context
+      context = @
+    ko.getObservable(context, field)
+  @observe: (context, state) =>
+    for key, value of state when not ko.isObservable(value)
+      if Utils.isFunction(value)
+        state[key] = ko.pureComputed(value)
         continue
       it = KOComponent.custom_wrappers.keys()
       while (obj = it.next()) and not obj.done
-        break if @[key] instanceof obj.value
+        break if value instanceof obj.value
       continue unless obj?.value
       wrapper = KOComponent.custom_wrappers.get(obj.value)
-      @[key] = wrapper(@[key])
-    ko.track(@, fields)
+      state[key] = wrapper(value)
+    Object.assign(context, state)
+    ko.track(context, Object.keys(state))
+  observe: (state) => KOComponent.observe(@, state)
 
   ###
   # knockout explicit memory safe computed for synchronizing values
