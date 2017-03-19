@@ -8,6 +8,7 @@ stringify = require 'component-register/lib/html/stringify'
 # value, css(as class), event(as on*), checked, and ref bindings are also pushed to attributes
 ###
 OBJECT_NOTATION = /^[^{(}(?]+:.+/
+BIND_NOTATION = /^\((.+)\)$/
 
 parseInterpolationMarkup = (textToParse, outerTextCallback, expressionCallback) ->
   outerMatch = textToParse.match(/^([\s\S]*?)\{([\s\S]*)}([\s\S]*)$/)
@@ -44,30 +45,35 @@ transformList = (nodes) ->
         binding = []
         attr_list = []
         event_list = []
-        for attr, value of node.attrs when attr isnt 'data-bind' and value.indexOf('{') isnt -1
-          parts = []
+        for attr, value of node.attrs when attr isnt 'data-bind'
           attr_value = ''
           class_applied = ''
+          if bind_match = value.match(BIND_NOTATION)
+            path = bind_match[1]?.split('.')
+            property = path.pop()
+            path.push('$data') unless path.length
+            attr_value = 'ko.getObservable(' + path.join('.') + ', ' + '\'' + property + '\'' + ')'
+          else if value.indexOf('{') isnt -1
+            parts = []
+            addText = (text) -> parts.push("'" + text.replace(/"/g, '\"') + "'") if text
 
-          addText = (text) -> parts.push("'" + text.replace(/"/g, '\"') + "'") if text
+            addExpr = (expression_text) ->
+              if expression_text
+                attr_value = expression_text
+                if OBJECT_NOTATION.test(expression_text) or (braced = expression_text.indexOf('{') is 0)
+                  attr_value = '{' + expression_text + '}' unless braced
+                  parts.push(attr_value)
+                else
+                  parts.push('ko.unwrap(' + expression_text + ')')
 
-          addExpr = (expression_text) ->
-            if expression_text
-              attr_value = expression_text
-              if OBJECT_NOTATION.test(expression_text) or (braced = expression_text.indexOf('{') is 0)
-                attr_value = '{' + expression_text + '}' unless braced
-                parts.push(attr_value)
-              else
-                parts.push('ko.unwrap(' + expression_text + ')')
+            parseInterpolationMarkup value, addText, addExpr
+            if parts.length > 1
+              if attr is 'class'
+                for p in parts
+                  if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
+                  else class_applied += p.replace(/'/g, '').trim() + ' '
+                node.attrs['class'] = class_applied.trim()
 
-          parseInterpolationMarkup value, addText, addExpr
-          if parts.length > 1
-            if attr is 'class'
-              for p in parts
-                if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
-                else class_applied += p.replace(/'/g, '').trim() + ' '
-              node.attrs['class'] = class_applied.trim()
-            else attr_value = "''+" + parts.join('+')
           if attr_value
             if attr in ['class', 'value', 'checked', 'ref', 'style'] or attr.indexOf('on') is 0
               switch attr

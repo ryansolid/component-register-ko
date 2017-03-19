@@ -43,11 +43,6 @@ module.exports = class KOComponent extends Component
   # knockout-es5 wrapper
   ###
   @custom_wrappers: new Map()
-  bind: (context, field) =>
-    if arguments.length is 1
-      field = context
-      context = @
-    ko.getObservable(context, field)
   @observe: (context, state) =>
     for key, value of state when not ko.isObservable(value)
       if Utils.isFunction(value)
