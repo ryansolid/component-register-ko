@@ -44,47 +44,53 @@ transformList = (nodes) ->
         binding = []
         attr_list = []
         event_list = []
-        for attr, value of node.attrs when attr isnt 'data-bind' and value.indexOf('{') isnt -1
-          parts = []
+        for attr, value of node.attrs when attr isnt 'data-bind'
           attr_value = ''
           class_applied = ''
+          if value.indexOf('{') isnt -1
+            parts = []
+            addText = (text) -> parts.push("'" + text.replace(/"/g, '\"') + "'") if text
 
-          addText = (text) -> parts.push("'" + text.replace(/"/g, '\"') + "'") if text
-
-          addExpr = (expression_text) ->
-            if expression_text
-              attr_value = expression_text
-              if OBJECT_NOTATION.test(expression_text) or (braced = expression_text.indexOf('{') is 0)
-                attr_value = '{' + expression_text + '}' unless braced
-                parts.push(attr_value)
-              else
-                parts.push('ko.unwrap(' + expression_text + ')')
-
-          parseInterpolationMarkup value, addText, addExpr
-          if parts.length > 1
-            if attr is 'class'
-              for p in parts
-                if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
-                else class_applied += p.replace(/'/g, '').trim() + ' '
-              node.attrs['class'] = class_applied.trim()
-            else attr_value = "''+" + parts.join('+')
-          if attr_value
-            if attr in ['class', 'value', 'checked', 'ref', 'style'] or attr.indexOf('on') is 0
-              switch attr
-                when 'class'
-                  binding.push("css: #{attr_value}")
-                when 'style'
-                  binding.push("csstext: #{attr_value}")
-                when 'value', 'checked', 'ref'
-                  binding.push("#{attr}: #{attr_value}")
+            addExpr = (expression_text) ->
+              if expression_text
+                attr_value = expression_text
+                if OBJECT_NOTATION.test(expression_text) or (braced = expression_text.indexOf('{') is 0)
+                  attr_value = '{' + expression_text + '}' unless braced
+                  parts.push(attr_value)
                 else
-                  event_list.push("#{attr[2..]}: #{attr_value}")
-            else
-              attr_list.push("'#{attr}': #{attr_value}")
+                  parts.push('ko.unwrap(' + expression_text + ')')
+
+            parseInterpolationMarkup value, addText, addExpr
+            if parts.length > 1
+              if attr is 'class'
+                for p in parts
+                  if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
+                  else class_applied += p.replace(/'/g, '').trim() + ' '
+                node.attrs['class'] = class_applied.trim()
+              else attr_value = "''+" + parts.join('+')
+          else if attr.indexOf('$') is 0
+            attr_value = "'#{value}'"
+
+          if attr_value
+            switch
+              when attr.indexOf('on') is 0
+                event_list.push("#{attr[2..]}: #{attr_value}")
+              when attr.indexOf('$') is 0
+                binding.push("#{attr[1..]}: #{attr_value}")
+              when attr is 'class'
+                binding.push("css: #{attr_value}")
+              when attr is 'style'
+                binding.push("csstext: #{attr_value}")
+              when attr is 'input'
+                binding.push("textInput: #{attr_value}")
+              when attr in ['value', 'checked']
+                binding.push("#{attr}: #{attr_value}")
+              else
+                attr_list.push("'#{attr}': #{attr_value}")
             delete node.attrs[attr] unless class_applied.length
 
         if attr_list.length
-          binding.push('prop: {' + attr_list.join(', ') + '}')
+          binding.push("prop: {#{attr_list.join(', ')}}")
         if event_list.length
           binding.push("event: {#{event_list.join(', ')}}")
         if binding.length
