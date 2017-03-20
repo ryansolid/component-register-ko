@@ -26,7 +26,7 @@ ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value', 'checked']
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
     try
-      element.boundCallback(binding_context)
+      element.boundCallback()
     catch err
       console.error err
 
