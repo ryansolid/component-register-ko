@@ -48,11 +48,11 @@ module.exports = class KOComponent extends Component
       if Utils.isFunction(value)
         state[key] = ko.pureComputed(value)
         continue
-      it = KOComponent.custom_wrappers.keys()
-      while (obj = it.next()) and not obj.done
-        break if value instanceof obj.value
-      continue unless obj?.value
-      wrapper = KOComponent.custom_wrappers.get(obj.value)
+      wrapper = null
+      KOComponent.custom_wrappers.forEach (handler, key) ->
+        return if wrapper
+        wrapper = handler if value instanceof key
+      continue unless wrapper
       state[key] = wrapper(value)
     Object.assign(context, state)
     ko.track(context, Object.keys(state))
