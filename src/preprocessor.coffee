@@ -73,24 +73,30 @@ transformList = (nodes) ->
                   if p.indexOf('{') is 0 or p.indexOf('ko.unwrap') is 0 then attr_value = p
                   else class_applied += p.replace(/'/g, '').trim() + ' '
                 node.attrs['class'] = class_applied.trim()
+              else attr_value = "''+" + parts.join('+')
+          else if attr.indexOf('$') is 0
+            attr_value = "'#{value}'"
 
           if attr_value
-            if attr in ['class', 'value', 'checked', 'ref', 'style'] or attr.indexOf('on') is 0
-              switch attr
-                when 'class'
-                  binding.push("css: #{attr_value}")
-                when 'style'
-                  binding.push("csstext: #{attr_value}")
-                when 'value', 'checked', 'ref'
-                  binding.push("#{attr}: #{attr_value}")
-                else
-                  event_list.push("#{attr[2..]}: #{attr_value}")
-            else
-              attr_list.push("'#{attr}': #{attr_value}")
+            switch
+              when attr.indexOf('on') is 0
+                event_list.push("#{attr[2..]}: #{attr_value}")
+              when attr.indexOf('$') is 0
+                binding.push("#{attr[1..]}: #{attr_value}")
+              when attr is 'class'
+                binding.push("css: #{attr_value}")
+              when attr is 'style'
+                binding.push("csstext: #{attr_value}")
+              when attr is 'input'
+                binding.push("textInput: #{attr_value}")
+              when attr in ['value', 'checked']
+                binding.push("#{attr}: #{attr_value}")
+              else
+                attr_list.push("'#{attr}': #{attr_value}")
             delete node.attrs[attr] unless class_applied.length
 
         if attr_list.length
-          binding.push('prop: {' + attr_list.join(', ') + '}')
+          binding.push("prop: {#{attr_list.join(', ')}}")
         if event_list.length
           binding.push("event: {#{event_list.join(', ')}}")
         if binding.length
