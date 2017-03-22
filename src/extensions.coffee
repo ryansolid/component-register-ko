@@ -39,7 +39,7 @@ ko.release = (obj) ->
   return
 
 ko.releaseKeys = (obj) ->
-  for k, v of obj when not (k in ['__released', '__element']) and ko.isReleasable(v)
+  for k, v of obj when not (k in ['__released', 'element']) and ko.isReleasable(v)
     obj[k] = null unless k is 'props'
     ko.release(v)
   return

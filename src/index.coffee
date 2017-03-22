@@ -28,16 +28,9 @@ module.exports = class KOComponent extends Component
   ###
   onPropertyChange: (name, val) => @props[name] = val
 
-  bindDom: (node, data) =>
-    return if @_dataFor(node)
-    ko.applyBindings(data, node)
+  bindDom: (node, data) => ko.applyBindings(data, node)
 
   unbindDom: (node) -> ko.cleanNode(node)
-
-  _dataFor: (node) =>
-    return true if Object.keys(node).some((test)-> test.indexOf('__ko__') is 0)
-    return false if not node.parentNode or node.parentNode?.nodeName in Utils.excludeTags
-    @_dataFor(node.parentNode)
 
   ###
   # knockout-es5 wrapper

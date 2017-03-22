@@ -26,7 +26,7 @@ ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value', 'checked']
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
     try
-      element.boundCallback(binding_context)
+      element.boundCallback()
     catch err
       console.error err
 
@@ -70,7 +70,9 @@ ko.bindingHandlers.prop =
           continue if element.getAttribute(key) is value
           element.setAttribute(key, value)
           continue
-        element.removeAttribute(key)
+        if element.hasAttribute(key)
+          element.removeAttribute(key)
+        else element[Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
