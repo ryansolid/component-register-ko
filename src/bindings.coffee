@@ -70,7 +70,9 @@ ko.bindingHandlers.prop =
           continue if element.getAttribute(key) is value
           element.setAttribute(key, value)
           continue
-        element.removeAttribute(key)
+        if element.hasAttribute(key)
+          element.removeAttribute(key)
+        else element[Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
