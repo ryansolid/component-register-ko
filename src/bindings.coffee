@@ -34,6 +34,7 @@ ko.bindingHandlers.bindComponent =
     inner_context = new ko.bindingContext element.__component, null, null, (context) ->
       ko.utils.extend(context, {$outerContext: binding_context})
     Utils.scheduleMicroTask ->
+      return if element.__released
       ko.applyBindingsToDescendants(inner_context, element)
     return {controlsDescendantBindings: true}
 
