@@ -12,7 +12,7 @@
     "coffee-script": "*"
   },
   "dependencies": {
-    "knockout": "*",
+    "knockout": "3.4.x",
     "knockout-es5": "*",
     "component-register": "0.2.x"
   }

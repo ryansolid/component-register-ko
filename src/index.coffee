@@ -28,7 +28,9 @@ module.exports = class KOComponent extends Component
   ###
   onPropertyChange: (name, val) => @props[name] = val
 
-  bindDom: (node, data) => ko.applyBindings(data, node)
+  bindDom: (node, data) =>
+    return if Object.keys(node).some((test)-> test.indexOf('__ko__') is 0)
+    ko.applyBindings(data, node)
 
   unbindDom: (node) -> ko.cleanNode(node)
 

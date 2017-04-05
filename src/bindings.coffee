@@ -34,6 +34,7 @@ ko.bindingHandlers.bindComponent =
     inner_context = new ko.bindingContext element.__component, null, null, (context) ->
       ko.utils.extend(context, {$outerContext: binding_context})
     Utils.scheduleMicroTask ->
+      return if element.__released
       ko.applyBindingsToDescendants(inner_context, element)
     return {controlsDescendantBindings: true}
 
@@ -56,11 +57,6 @@ ko.bindingHandlers.prop =
         value = null unless value?
         if Utils.isObject(value)
           key = Utils.toProperty(k)
-          if Array.isArray(value)
-            continue if Array.isArray(element[key]) and not Utils.arrayDiff(value, element[key])
-            element[key] = value[..]
-            continue
-          continue if element[key] is value
           element[key] = value
           continue
         # attribute bind
