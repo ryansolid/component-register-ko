@@ -38,7 +38,7 @@ module.exports = class KOComponent extends Component
   # knockout-es5 wrapper
   ###
   @custom_wrappers: new Map()
-  @observe: (context, state) =>
+  @observe: (state, context={}) ->
     for key, value of state when not ko.isObservable(value)
       if Utils.isFunction(value)
         state[key] = ko.pureComputed(value)
@@ -51,7 +51,7 @@ module.exports = class KOComponent extends Component
       state[key] = wrapper(value)
     Object.assign(context, state)
     ko.track(context, Object.keys(state))
-  observe: (state) => KOComponent.observe(@, state)
+  observe: (state) => KOComponent.observe(state, @)
 
   ###
   # knockout explicit memory safe computed for synchronizing values
