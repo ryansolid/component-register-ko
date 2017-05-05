@@ -51,7 +51,7 @@ module.exports = class KOComponent extends Component
       state[key] = wrapper(value)
     Object.assign(context, state)
     ko.track(context, Object.keys(state))
-  observe: (state) => KOComponent.observe(state, @)
+  observe: (state, context=@) => KOComponent.observe(state, context)
 
   ###
   # knockout explicit memory safe computed for synchronizing values
@@ -59,9 +59,11 @@ module.exports = class KOComponent extends Component
   sync: (paths..., callback) =>
     comp = ko.computed =>
       args = for path in paths
-        resolved = @
-        for part in path.split('.')
-          break unless resolved = resolved[part]
-        resolved
+        if ko.isObservable(path) then path()
+        else
+          resolved = @
+          for part in path.split('.')
+            break unless resolved = resolved[part]
+          resolved
       ko.ignoreDependencies -> callback.apply(null, args)
     @addReleaseCallback -> comp.dispose()
