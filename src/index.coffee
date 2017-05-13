@@ -39,19 +39,29 @@ module.exports = class KOComponent extends Component
   ###
   @custom_wrappers: new Map()
   @observe: (state, context={}) ->
-    for key, value of state when not ko.isObservable(value)
-      if Utils.isFunction(value)
-        state[key] = ko.pureComputed(value)
-        continue
-      wrapper = null
-      KOComponent.custom_wrappers.forEach (handler, key) ->
-        return if wrapper
-        wrapper = handler if value instanceof key
-      continue unless wrapper
-      state[key] = wrapper(value)
+    for key, value of state
+      do (key, value) ->
+        if not ko.isObservable(value)
+          if Utils.isFunction(value)
+            state[key] = ko.pureComputed(value)
+            return
+          wrapper = null
+          KOComponent.custom_wrappers.forEach (handler, key) ->
+            return if wrapper
+            wrapper = handler if value instanceof key
+          return unless wrapper
+          state[key] = wrapper(value)
+        if context.addReleaseCallback? and state[key].dispose?
+          context.addReleaseCallback -> state[key].dispose()
     Object.assign(context, state)
     ko.track(context, Object.keys(state))
   observe: (state, context=@) => KOComponent.observe(state, context)
+  get: (path) =>
+    resolved = @
+    parts = path.split('.')
+    property = parts.pop()
+    (break unless resolved = resolved[part]) for part in parts
+    ko.getObservable(resolved, property)
 
   ###
   # knockout explicit memory safe computed for synchronizing values
