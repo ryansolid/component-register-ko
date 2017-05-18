@@ -6,11 +6,11 @@ Component Register KO is a Knockout specific implementation of Component Registe
 Some key extras:
 * React-like syntax from the preprocessor (for text and attribute bindings)
 * '$' data-bind shorthand for templates
-* Reference cleanup functionality
-* Observable mapping observable fn
 * Explicit computed sync mechanism
 * 'use' binding for creating binding context (essentially 'with' binding without forced redraw)
 * 'ref' binding to extract HTML element (to avoid necessity of custom bindings or spaghetti selectors)
+* Reference cleanup functionality
+* Extension functions to transform observables
 
 TODO: Write documentation
 
