@@ -1,3 +1,5 @@
+ko = require 'knockout'
+
 ###
 # Helpers
 ###
