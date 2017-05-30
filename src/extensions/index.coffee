@@ -1,4 +1,5 @@
 ko = require 'knockout'
+{Utils} = require 'component-register'
 
 ###
 # Patch ko to consider nodes connected to shadowRoots are still connected to document
@@ -11,4 +12,4 @@ ko.utils.domNodeIsAttachedToDocument = (node) ->
   node is document.documentElement
 
 require './release'
-require './transform'
+require './project'
