@@ -57,6 +57,7 @@ ko.subscribable.fn.filter = (fn) ->
   obsv
 
 ko.subscribable.fn.pluck = (property) -> @map (obj) -> obj?[property]
+ko.subscribable.fn.mapTo = (value) -> @map -> value
 
 ko.subscribable.fn.scan = (fn, initial_value) ->
   obsv = ko.pureComputed(=>

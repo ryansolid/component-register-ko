@@ -1,6 +1,11 @@
 ko = require 'knockout'
 {Registry, Utils} = require 'component-register'
 
+BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
+  '|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop' +
+  '|multiple|muted|no(?:resize|shade|validate|wrap)?|open|reversed|seamless' +
+  '|selected|sortable|truespeed|typemustmatch)$')
+
 ###
 # these override the standard binding providers to autobind our components
 ###
@@ -67,7 +72,9 @@ ko.bindingHandlers.prop =
           element.setAttribute(key, value)
           continue
         if element.hasAttribute(key)
-          element.removeAttribute(key)
+          if BOOLEAN_ATTR.test(key)
+            element.removeAttribute(key)
+          else element.setAttribute(key, value)
         else element[Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
@@ -100,6 +107,27 @@ ko.bindingHandlers.ref =
 ko.bindingHandlers.csstext =
   update: (element, value_accessor) ->
     element.style.cssText = ko.unwrap(value_accessor())
+
+###
+# checked binding to hanlde indeterminate
+###
+ko.bindingHandlers.tristate =
+  init: (element, value_accessor, allBindings) ->
+    obsv = value_accessor()
+    ko.utils.registerEventHandler element, 'click', (e) ->
+      if ko.unwrap(obsv) is false then obsv?(true) else obsv?(false)
+
+  update: (element, value_accessor) ->
+    switch ko.unwrap(value_accessor())
+      when true
+        element.checked = true
+        element.indeterminate = false
+      when false
+        element.checked = false
+        element.indeterminate = false
+      else
+        element.checked = false
+        element.indeterminate = true
 
 isFalsy = (data) ->
   return true unless data

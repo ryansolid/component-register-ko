@@ -12,4 +12,4 @@ ko.utils.domNodeIsAttachedToDocument = (node) ->
   node is document.documentElement
 
 require './release'
-require './project'
+require './reactive'
