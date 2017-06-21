@@ -56,6 +56,11 @@ ko.subscribable.fn.filter = (fn) ->
   addDisposable(@, comp)
   obsv
 
+ko.subscribable.fn.clone = ->
+  obsv = ko.pureComputed => @()
+  addDisposable(@, obsv)
+  obsv
+
 ko.subscribable.fn.pluck = (property) -> @map (obj) -> obj?[property]
 ko.subscribable.fn.mapTo = (value) -> @map -> value
 

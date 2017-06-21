@@ -196,34 +196,3 @@ makeWithIfBinding('if')
 makeWithIfBinding('ifnot', false, true)
 makeWithIfBinding 'with', true, false, (bindingContext, dataValue) ->
   bindingContext.createStaticChildContext dataValue
-
-ko.bindingHandlers.event =
-  init: (element, valueAccessor, allBindings, viewModel, bindingContext) ->
-    eventsToHandle = valueAccessor() or {}
-    ko.utils.objectForEach eventsToHandle, (eventName) ->
-      if typeof eventName == 'string'
-        ko.utils.registerEventHandler element, eventName, (event) ->
-          handlerReturnValue = undefined
-          handlerFunction = valueAccessor()[eventName]
-          return unless handlerFunction
-          try
-            argsForHandler = ko.utils.makeArray(arguments)
-            viewModel = bindingContext['$data']
-            # pass back as single object for observables
-            if ko.isObservable(handlerFunction)
-              handlerReturnValue = handlerFunction({context: viewModel, event})
-            else
-              argsForHandler.unshift viewModel
-              handlerReturnValue = handlerFunction.apply(viewModel, argsForHandler)
-          finally
-            if handlerReturnValue != true
-              # Normally we want to prevent default action. Developer can override this be explicitly returning true.
-              if event.preventDefault
-                event.preventDefault()
-              else event.returnValue = false
-
-          bubble = allBindings.get(eventName + 'Bubble') != false
-          if !bubble
-            event.cancelBubble = true
-            if event.stopPropagation
-              event.stopPropagation()
