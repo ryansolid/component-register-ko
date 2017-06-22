@@ -9,6 +9,7 @@ addDisposable = (source, subscriber) ->
     og_dispose = subscriber.dispose
     subscriber.dispose = ->
       dispose() for dispose in subscriber._disposables
+      delete subscriber.source
       og_dispose?.apply(subscriber, arguments)
   subscriber._disposables.push(source.dispose) if source.dispose
 
@@ -20,12 +21,13 @@ ko.subscribable.fn.map = (fn) ->
   obsv = ko.pureComputed(=>
     value = @()
     return if value is undefined
-    return obsv?._latestValue if value is old_value
+    return obsv?._latestValue if @equalityComparer(value, old_value)
     ko.release(obsv?._latestValue) if old_value
     old_value = value
     ko.ignoreDependencies -> fn(value)
   ).extend(notify: 'always')
   addDisposable(@, obsv)
+  obsv.source = @source or @
   obsv
 
 ko.subscribable.fn.arrayMap = (fn) ->
@@ -41,6 +43,7 @@ ko.subscribable.fn.arrayMap = (fn) ->
     return mapped
   ).extend(notify: 'always')
   addDisposable(@, obsv)
+  obsv.source = @source or @
   obsv
 
 ko.subscribable.fn.filter = (fn) ->
@@ -54,11 +57,13 @@ ko.subscribable.fn.filter = (fn) ->
     comp.dispose()
     og_dispose?.apply(obsv, arguments)
   addDisposable(@, comp)
+  obsv.source = @source or @
   obsv
 
 ko.subscribable.fn.clone = ->
   obsv = ko.pureComputed => @()
   addDisposable(@, obsv)
+  obsv.source = @source or @
   obsv
 
 ko.subscribable.fn.pluck = (property) -> @map (obj) -> obj?[property]
@@ -72,6 +77,7 @@ ko.subscribable.fn.scan = (fn, initial_value) ->
     fn(memo, value)
   ).extend(notify: 'always')
   addDisposable(@, obsv)
+  obsv.source = @source or @
   obsv
 
 ko.subscribable.fn.debounce = (time) ->
