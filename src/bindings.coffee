@@ -74,7 +74,7 @@ ko.bindingHandlers.prop =
         if element.hasAttribute(key)
           if BOOLEAN_ATTR.test(key)
             element.removeAttribute(key)
-          else element.setAttribute(key, value)
+          else element.setAttribute(key, value or '')
         else element[Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
