@@ -39,7 +39,7 @@ ko.subscribable.fn.arrayMap = (fn) ->
       return obsv?._latestValue[index] if (index = old_value?.indexOf(test)) isnt -1
       ko.ignoreDependencies -> fn(test)
     ko.release(to_release) if obsv?._latestValue and (to_release = obsv?._latestValue.filter((test) -> mapped.indexOf(test) is -1)).length
-    old_value = value
+    old_value = value[..]
     return mapped
   ).extend(notify: 'always')
   addDisposable(@, obsv)
