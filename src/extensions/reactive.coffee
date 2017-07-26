@@ -11,7 +11,7 @@ addDisposable = (source, subscriber) ->
       dispose() for dispose in subscriber._disposables
       delete subscriber.source
       og_dispose?.apply(subscriber, arguments)
-  subscriber._disposables.push(source.dispose) if source.dispose
+  subscriber._disposables.push(source.dispose.bind(source)) if source.dispose
 
 ###
 # Custom functions to transform observable data
