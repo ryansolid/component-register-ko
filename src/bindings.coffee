@@ -30,18 +30,12 @@ ko.bindingProvider.instance.nodeHasBindings = (node) ->
 ko.bindingHandlers.bindComponent =
   after: ['prop', 'attr', 'value', 'checked']
   init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    try
-      element.boundCallback()
-    catch err
-      console.error err
-
-    return if Utils.useShadowDOM
-    inner_context = new ko.bindingContext element.__component, null, null, (context) ->
-      ko.utils.extend(context, {$outerContext: binding_context})
     Utils.scheduleMicroTask ->
       return if element.__released
-      ko.applyBindingsToDescendants(inner_context, element)
-    return {controlsDescendantBindings: true}
+      try
+        element.boundCallback()
+      catch err
+        console.error err
 
 ###
 # used to bind to element properties
@@ -78,14 +72,6 @@ ko.bindingHandlers.prop =
         else element[Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
-
-###
-# Slot binding to handle context change when not using shadowdom
-###
-ko.bindingHandlers.slot =
-  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    ko.applyBindingsToDescendants(binding_context.$outerContext, element)
-    return {controlsDescendantBindings: true}
 
 ###
 # stops binding
