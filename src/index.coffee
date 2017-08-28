@@ -3,8 +3,10 @@ require './extensions'
 require './bindings'
 
 {Component, Utils} = require 'component-register'
+CSSPolyfill = require 'component-register/lib/css_polyfill'
 
 module.exports = class KOComponent extends Component
+  # element_type: BoundElement
   constructor: (element, props) ->
     super
     @props = {}
@@ -19,18 +21,23 @@ module.exports = class KOComponent extends Component
 
     @addReleaseCallback => ko.releaseKeys(@)
 
+  onRender: (element) ->
+    return unless template = @constructor.template
+    template = CSSPolyfill.html(template, @css_id) if @css_id
+    el = document.createElement('div')
+    el.innerHTML = template
+    unless Object.keys(el).some((test)-> test.indexOf('__ko__') is 0)
+      ko.applyBindings(@, el)
+    @addReleaseCallback -> ko.cleanNode(element)
+    nodes = Array::slice.call(el.childNodes)
+    element.shadowRoot.appendChild(node) while node = nodes?.shift()
+
   ###
   # element property change default handler
   ###
   onPropertyChange: (name, val) =>
     return @props[name] = val if Utils.isFunction(val)
     @props[name]?(val)
-
-  bindDom: (node, data) =>
-    return if Object.keys(node).some((test)-> test.indexOf('__ko__') is 0)
-    ko.applyBindings(data, node)
-
-  unbindDom: (node) -> ko.cleanNode(node)
 
   ###
   # knockout explicit memory safe computed for synchronizing values

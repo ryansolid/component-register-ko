@@ -12,30 +12,13 @@ BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscre
 _getBindingAccessors = ko.bindingProvider.instance.getBindingAccessors
 ko.bindingProvider.instance.getBindingAccessors = (node) ->
   bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
-  if Registry[Utils.toComponentName(node?.tagName)]
-    bindings.bindComponent = (-> true)
-  else if node.nodeName in Utils.excludeTags
+  if node.nodeName in Utils.excludeTags
     bindings.stopBinding = (-> true)
-  else if node.nodeName is "SLOT" and node.hasAttribute('assigned')
-    bindings.slot = (-> true)
   bindings
 
 _nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
 ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return !!Registry[Utils.toComponentName(node?.tagName)] or (node.nodeName is 'SLOT' and node.hasAttribute('assigned')) or node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
-
-###
-# main component binding
-###
-ko.bindingHandlers.bindComponent =
-  after: ['prop', 'attr', 'value', 'checked']
-  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    Utils.scheduleMicroTask ->
-      return if element.__released
-      try
-        element.boundCallback()
-      catch err
-        console.error err
+  return node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # used to bind to element properties
@@ -54,7 +37,7 @@ ko.bindingHandlers.prop =
       for k, v of ko.unwrap(valueAccessor())
         value = ko.unwrap(v)
         value = null unless value?
-        if Utils.isObject(value)
+        if Utils.isObject(value) or k in ['value', 'checked']
           key = Utils.toProperty(k)
           element[key] = value
           continue

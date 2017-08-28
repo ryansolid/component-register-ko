@@ -36,8 +36,6 @@ wrapExpression = (expression_text) ->
   result.push {type: 'comment', content: '/ko'}
   result
 
-isCheckbox = (node) -> node.attrs.type is 'checkbox'
-
 transformList = (nodes) ->
   for node in nodes[..]
     switch node.type
@@ -83,12 +81,6 @@ transformList = (nodes) ->
                 binding.push("css: #{attr_value}")
               when attr is 'style'
                 binding.push("csstext: #{attr_value}")
-              when attr is 'input'
-                binding.push("textInput: #{attr_value}")
-              when attr is 'checked' and isCheckbox(node)
-                binding.push("tristate: #{attr_value}")
-              when attr in ['value', 'checked']
-                binding.push("#{attr}: #{attr_value}")
               else
                 attr_list.push("'#{attr}': #{attr_value}")
             delete node.attrs[attr] unless class_applied.length
