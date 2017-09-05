@@ -6,7 +6,7 @@ require './bindings'
 CSSPolyfill = require 'component-register/lib/css_polyfill'
 
 module.exports = class KOComponent extends Component
-  # element_type: BoundElement
+  @exclude_tags = []
   constructor: (element, props) ->
     super
     @props = {}
@@ -50,3 +50,17 @@ module.exports = class KOComponent extends Component
       args.push(obsv()) for obsv in observables
       ko.ignoreDependencies -> callback.apply(null, args)
     @addReleaseCallback -> comp.dispose()
+
+###
+# these override the standard binding providers to autobind our components
+###
+_getBindingAccessors = ko.bindingProvider.instance.getBindingAccessors
+ko.bindingProvider.instance.getBindingAccessors = (node) ->
+  bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
+  if node.nodeName in KOComponent.exclude_tags
+    bindings.stopBinding = (-> true)
+  bindings
+
+_nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
+ko.bindingProvider.instance.nodeHasBindings = (node) ->
+  return (node.nodeName in KOComponent.exclude_tags) or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)

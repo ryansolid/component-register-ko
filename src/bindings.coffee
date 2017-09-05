@@ -1,25 +1,11 @@
 ko = require 'knockout'
-{Registry, Utils} = require 'component-register'
+{Utils} = require 'component-register'
 CSSPolyfill = require 'component-register/lib/css_polyfill'
 
 BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
   '|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop' +
   '|multiple|muted|no(?:resize|shade|validate|wrap)?|open|reversed|seamless' +
   '|selected|sortable|truespeed|typemustmatch)$')
-
-###
-# these override the standard binding providers to autobind our components
-###
-_getBindingAccessors = ko.bindingProvider.instance.getBindingAccessors
-ko.bindingProvider.instance.getBindingAccessors = (node) ->
-  bindings = _getBindingAccessors.apply(ko.bindingProvider.instance, arguments) or {}
-  if node.nodeName in Utils.excludeTags
-    bindings.stopBinding = (-> true)
-  bindings
-
-_nodeHasBindings = ko.bindingProvider.instance.nodeHasBindings
-ko.bindingProvider.instance.nodeHasBindings = (node) ->
-  return node.nodeName in Utils.excludeTags or _nodeHasBindings.apply(ko.bindingProvider.instance, arguments)
 
 ###
 # used to bind to element properties
