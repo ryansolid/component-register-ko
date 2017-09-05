@@ -26,6 +26,8 @@ module.exports = class KOComponent extends Component
     template = CSSPolyfill.html(template, @css_id) if @css_id
     el = document.createElement('div')
     el.innerHTML = template
+    # support webcomponent template polyfill for IE
+    HTMLTemplateElement.bootstrap?(el)
     unless Object.keys(el).some((test)-> test.indexOf('__ko__') is 0)
       ko.applyBindings(@, el)
     @addReleaseCallback -> ko.cleanNode(element)

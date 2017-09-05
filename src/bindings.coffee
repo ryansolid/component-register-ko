@@ -1,5 +1,6 @@
 ko = require 'knockout'
 {Registry, Utils} = require 'component-register'
+CSSPolyfill = require 'component-register/lib/css_polyfill'
 
 BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
   '|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop' +
@@ -55,6 +56,22 @@ ko.bindingHandlers.prop =
         else element[Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
+
+###
+# injects HTML Template Element
+###
+ko.virtualElements.allowedBindings.inject = true
+ko.bindingHandlers.inject =
+  init: -> return {controlsDescendantBindings: true}
+  update: (element, valueAccessor, all_bindings_accessor, view_model, binding_context) ->
+    return unless template = ko.unwrap(valueAccessor())
+    el = document.createElement('div')
+    el.appendChild(document.importNode(template.content, true))
+    el.innerHTML = CSSPolyfill.html(el.innerHTML, css_id) if css_id = binding_context.$root?.css_id
+    ko.applyBindingsToDescendants(binding_context, el)
+    nodes = Array::slice.call(el.childNodes)
+    ko.virtualElements.emptyNode(element)
+    ko.virtualElements.setDomNodeChildren(element, nodes)
 
 ###
 # stops binding
