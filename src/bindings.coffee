@@ -60,12 +60,6 @@ ko.bindingHandlers.inject =
     ko.virtualElements.setDomNodeChildren(element, nodes)
 
 ###
-# stops binding
-###
-ko.bindingHandlers.stopBinding =
-  init: (element) -> return {controlsDescendantBindings: true}
-
-###
 # Grabs element reference for non-components
 ###
 ko.bindingHandlers.ref =
