@@ -39,7 +39,7 @@ ko.bindingHandlers.prop =
           if BOOLEAN_ATTR.test(key)
             element.removeAttribute(key)
           else element.setAttribute(key, if value? then value else '')
-        else element[Utils.toProperty(k)] = value
+        else element[element.lookupProp?(k) or Utils.toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
