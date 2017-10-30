@@ -53,7 +53,7 @@ ko.bindingHandlers.inject =
     return unless template = ko.unwrap(valueAccessor())
     el = document.createElement('div')
     el.appendChild(document.importNode(template.content, true))
-    el.innerHTML = CSSPolyfill.html(el.innerHTML, css_id) if css_id = bindingContext.$root?.css_id
+    el.innerHTML = CSSPolyfill.html(el.innerHTML, cssId) if cssId = bindingContext.$root?.cssId
     ko.applyBindingsToDescendants(bindingContext, el)
     nodes = Array::slice.call(el.childNodes)
     ko.virtualElements.emptyNode(element)
