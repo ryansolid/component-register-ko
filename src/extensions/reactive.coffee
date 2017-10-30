@@ -6,40 +6,40 @@ ko = require 'knockout'
 addDisposable = (source, subscriber) ->
   unless subscriber._disposables
     subscriber._disposables = []
-    og_dispose = subscriber.dispose
+    ogDispose = subscriber.dispose
     subscriber.dispose = ->
       dispose() for dispose in subscriber._disposables
       delete subscriber.source
-      og_dispose?.apply(subscriber, arguments)
+      ogDispose?.apply(subscriber, arguments)
   subscriber._disposables.push(source.dispose.bind(source)) if source.dispose
 
 ###
 # Custom functions to transform observable data
 ###
 ko.subscribable.fn.map = (fn) ->
-  old_value = null
+  oldValue = null
   obsv = ko.pureComputed(=>
     value = @()
     return if value is undefined
-    return obsv?._latestValue if @equalityComparer(value, old_value)
-    ko.release(obsv?._latestValue) if old_value
-    old_value = value
-    ko.ignoreDependencies -> fn(value)
+    return obsv?._latestValue if @equalityComparer(value, oldValue)
+    ko.release(obsv?._latestValue) if oldValue
+    oldValue = value
+    fn(value)
   ).extend(notify: 'always')
   addDisposable(@, obsv)
   obsv.source = @source or @
   obsv
 
 ko.subscribable.fn.arrayMap = (fn) ->
-  old_value = []
+  oldValue = []
   obsv = ko.pureComputed(=>
     value = @()
     return if value is undefined
     mapped = value.map (test) ->
-      return obsv?._latestValue[index] if (index = old_value?.indexOf(test)) isnt -1
-      ko.ignoreDependencies -> fn(test)
+      return obsv?._latestValue[index] if (index = oldValue?.indexOf(test)) isnt -1
+      fn(test)
     ko.release(to_release) if obsv?._latestValue and (to_release = obsv?._latestValue.filter((test) -> mapped.indexOf(test) is -1)).length
-    old_value = value[..]
+    oldValue = value[..]
     return mapped
   ).extend(notify: 'always')
   addDisposable(@, obsv)
@@ -52,10 +52,10 @@ ko.subscribable.fn.filter = (fn) ->
     value = @()
     return if value is undefined or not fn(value)
     obsv(value)
-  og_dispose = obsv.dispose
+  ogDispose = obsv.dispose
   obsv.dispose = ->
     comp.dispose()
-    og_dispose?.apply(obsv, arguments)
+    ogDispose?.apply(obsv, arguments)
   addDisposable(@, comp)
   obsv.source = @source or @
   obsv
@@ -89,8 +89,8 @@ ko.subscribable.fn.throttle = (time) ->
 ko.fromEvent = (element, name) ->
   obsv = ko.observable().extend({notify: 'always'})
   element.addEventListener(name, obsv)
-  og_dispose = obsv.dispose
+  ogDispose = obsv.dispose
   obsv.dispose = =>
     element.removeEventListener(name, obsv)
-    og_dispose?.apply(obsv, arguments)
+    ogDispose?.apply(obsv, arguments)
   obsv

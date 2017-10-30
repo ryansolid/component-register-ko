@@ -3,7 +3,7 @@
   "description": "Knockout implementation of Component Register",
   "author": "Ryan Carniato",
   "license": "MIT",
-  "version": "0.3.0-beta.12",
+  "version": "0.3.0-beta.13",
   "main": "lib/index.js",
   "scripts": {
     "prepublish": "coffee --compile --bare --no-header --output lib/ src/"

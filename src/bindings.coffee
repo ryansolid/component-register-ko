@@ -1,6 +1,6 @@
 ko = require 'knockout'
 {Utils} = require 'component-register'
-CSSPolyfill = require 'component-register/lib/css_polyfill'
+CSSPolyfill = require 'component-register/lib/css-polyfill'
 
 BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
   '|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop' +
@@ -25,7 +25,7 @@ ko.bindingHandlers.prop =
         value = ko.unwrap(v)
         value = null unless value?
         if Utils.isObject(value) or k in ['value', 'checked']
-          key = Utils.toProperty(k)
+          key = element.lookupProp?(k) or Utils.toProperty(k)
           element[key] = value
           continue
         # attribute bind
@@ -49,12 +49,12 @@ ko.bindingHandlers.prop =
 ko.virtualElements.allowedBindings.inject = true
 ko.bindingHandlers.inject =
   init: -> return {controlsDescendantBindings: true}
-  update: (element, valueAccessor, all_bindings_accessor, view_model, binding_context) ->
+  update: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
     return unless template = ko.unwrap(valueAccessor())
     el = document.createElement('div')
     el.appendChild(document.importNode(template.content, true))
-    el.innerHTML = CSSPolyfill.html(el.innerHTML, css_id) if css_id = binding_context.$root?.css_id
-    ko.applyBindingsToDescendants(binding_context, el)
+    el.innerHTML = CSSPolyfill.html(el.innerHTML, css_id) if css_id = bindingContext.$root?.css_id
+    ko.applyBindingsToDescendants(bindingContext, el)
     nodes = Array::slice.call(el.childNodes)
     ko.virtualElements.emptyNode(element)
     ko.virtualElements.setDomNodeChildren(element, nodes)
@@ -64,27 +64,27 @@ ko.bindingHandlers.inject =
 ###
 ko.bindingHandlers.ref =
   after: ['prop', 'attr', 'value', 'checked', 'bindComponent']
-  init: (element, value_accessor, all_bindings_accessor) ->
-    value_accessor()(element)
+  init: (element, valueAccessor, allBindingsAccessor) ->
+    valueAccessor()(element)
 
 ###
 # sets the style.cssText property of an element, removes timing issue with binding to attribute
 ###
 ko.bindingHandlers.csstext =
-  update: (element, value_accessor) ->
-    element.style.cssText = ko.unwrap(value_accessor())
+  update: (element, valueAccessor) ->
+    element.style.cssText = ko.unwrap(valueAccessor())
 
 ###
 # checked binding to hanlde indeterminate
 ###
 ko.bindingHandlers.tristate =
-  init: (element, value_accessor, allBindings) ->
-    obsv = value_accessor()
+  init: (element, valueAccessor, allBindings) ->
+    obsv = valueAccessor()
     ko.utils.registerEventHandler element, 'click', (e) ->
       if ko.unwrap(obsv) is false then obsv?(true) else obsv?(false)
 
-  update: (element, value_accessor) ->
-    switch ko.unwrap(value_accessor())
+  update: (element, valueAccessor) ->
+    switch ko.unwrap(valueAccessor())
       when true
         element.checked = true
         element.indeterminate = false
@@ -105,23 +105,23 @@ isFalsy = (data) ->
 ###
 ko.virtualElements.allowedBindings.use = true
 ko.bindingHandlers.use =
-  init: (element, value_accessor, all_bindings_accessor, view_model, binding_context) ->
-    template_nodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true)
-    needs_bind = true
+  init: (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+    templateNodes = ko.utils.cloneNodes(ko.virtualElements.childNodes(element), true)
+    needsBind = true
     obsv = ko.observable()
     ko.computed ->
-      value = value_accessor()
+      value = valueAccessor()
       data = ko.unwrap(value)
       unless isFalsy(data)
         obsv(data)
-        if needs_bind
-          ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(template_nodes));
-          context = binding_context.createChildContext(obsv)
+        if needsBind
+          ko.virtualElements.setDomNodeChildren(element, ko.utils.cloneNodes(templateNodes));
+          context = bindingContext.createChildContext(obsv)
           ko.applyBindingsToDescendants(context, element)
-          needs_bind = false
+          needsBind = false
       else
         ko.virtualElements.emptyNode(element);
-        needs_bind = true
+        needsBind = true
       return
     , null, {disposeWhenNodeIsRemoved: element}
     return {controlsDescendantBindings: true}

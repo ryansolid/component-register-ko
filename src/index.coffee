@@ -3,7 +3,7 @@ require './extensions'
 require './bindings'
 
 {Component, Utils} = require 'component-register'
-CSSPolyfill = require 'component-register/lib/css_polyfill'
+CSSPolyfill = require 'component-register/lib/css-polyfill'
 
 module.exports = class KOComponent extends Component
   constructor: (element, props) ->
@@ -22,7 +22,7 @@ module.exports = class KOComponent extends Component
 
   onRender: (element) ->
     return unless template = @constructor.template
-    template = CSSPolyfill.html(template, @css_id) if @css_id
+    template = CSSPolyfill.html(template, @cssId) if @cssId
     el = document.createElement('div')
     el.innerHTML = template
     # support webcomponent template polyfill for IE
