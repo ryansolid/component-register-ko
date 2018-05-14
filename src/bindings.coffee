@@ -60,6 +60,34 @@ ko.bindingHandlers.inject =
     ko.virtualElements.setDomNodeChildren(element, nodes)
 
 ###
+# portal HTML Template Element
+###
+ko.virtualElements.allowedBindings.portal = true
+ko.bindingHandlers.portal =
+  init:  (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
+    mountEl = ko.unwrap(valueAccessor()) or document.body
+    el = document.createElement('div')
+    el.host = bindingContext.$root.element
+    root = el.attachShadow({mode: 'open'})
+    el.appendChild(child) while child = ko.virtualElements.firstChild(element)
+    ko.applyBindingsToDescendants(bindingContext, el)
+
+    unless Utils.polyfillCSS
+      script = document.createElement('style')
+      script.setAttribute('type', 'text/css')
+      script.textContent = bindingContext.$root.element.ComponentType.styles
+      root.appendChild(script)
+
+    root.appendChild(child) while child = el.firstChild
+    mountEl.appendChild(el)
+
+    ko.utils.domNodeDisposal.addDisposeCallback bindingContext.$root.element, ->
+      delete el.host
+      ko.removeNode(el)
+
+    return {controlsDescendantBindings: true}
+
+###
 # Grabs element reference for non-components
 ###
 ko.bindingHandlers.ref =
