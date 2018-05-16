@@ -1,4 +1,4 @@
-ko = require 'knockout'
+import ko from 'knockout'
 
 ###
 # Helpers

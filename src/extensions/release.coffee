@@ -1,5 +1,5 @@
-ko = require 'knockout'
-{Utils} = require 'component-register'
+import ko from 'knockout'
+import { Utils } from 'component-register'
 LIFECYCLE_METHODS = ['dispose']
 
 ###

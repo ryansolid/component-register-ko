@@ -1,5 +1,4 @@
-parse = require 'component-register/lib/html/parse'
-stringify = require 'component-register/lib/html/stringify'
+import { parse, stringify } from 'html-parse-string'
 
 ###
 # Based on knockout.punches and altered to handle prop binding
@@ -110,7 +109,7 @@ transformList = (nodes) ->
           nodes.splice.apply(nodes, [index, 1].concat(parsedNodes))
   return
 
-module.exports = (text) ->
+export default (text) ->
   parsed = parse(text)
   if text and not parsed.length
     parsed.push({type: 'text', content: text})

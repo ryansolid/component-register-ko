@@ -1,4 +1,4 @@
-ko = require 'knockout'
+import ko from 'knockout'
 
 ###
 # Patch ko to consider nodes connected to shadowRoots are still connected to document
@@ -9,5 +9,5 @@ ko.utils.domNodeIsAttachedToDocument = (node) ->
   null while (node = node.parentNode or node.host) and node isnt document.documentElement
   node is document.documentElement
 
-require './release'
-require './reactive'
+import './release'
+import './reactive'

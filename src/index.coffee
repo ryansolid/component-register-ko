@@ -1,44 +1,58 @@
-ko = require 'knockout'
-require './extensions'
-require './bindings'
+import ko from 'knockout'
+import './extensions'
+import './bindings'
 
-{Component, Utils} = require 'component-register'
-CSSPolyfill = require 'component-register/lib/css-polyfill'
+import { register as coreRegister, compose, createMixin, Utils } from 'component-register'
+import { withEvents, withTimer, withShadyCSS } from 'component-register-extensions'
 
-module.exports = class KOComponent extends Component
-  constructor: (element, props) ->
-    super
-    @props = {}
-    for key, prop of props then do (key, prop) =>
-      return @props[key] = element[key] if Utils.isFunction(element[key])
+export withKO = (ComponentType) ->
+  withShadyCSS withEvents withTimer (options) ->
+    { element, props: defaultProps, timer, events } = options
+    props = {}
+    for key, prop of defaultProps then do (key, prop) =>
+      return props[key] = element[key] if Utils.isFunction(element[key])
       if Array.isArray(element[key])
-        @props[key] = ko.observableArray(element[key])
-      else @props[key] = ko.observable(element[key])
-      @props[key].subscribe (v) =>
-        return if @__released
-        @setProperty(key, v)
+        props[key] = ko.observableArray(element[key])
+      else props[key] = ko.observable(element[key])
+      props[key].subscribe (v) -> element.setProperty(key, v)
 
-    @addReleaseCallback => ko.releaseKeys(@)
+    element.addPropertyChangedCallback (name, val) ->
+      return props[name] = val if Utils.isFunction(val)
+      props[name]?(val)
 
-  onRender: (element) ->
-    return unless template = @constructor.template
-    template = CSSPolyfill.html(template, @cssId) if @cssId
-    el = document.createElement('div')
-    el.innerHTML = template
-    # support webcomponent template polyfill for IE
-    HTMLTemplateElement.bootstrap?(el)
-    unless Object.keys(el).some((test)-> test.indexOf('__ko__') is 0)
-      ko.applyBindings(@, el)
-    @addReleaseCallback -> ko.cleanNode(element)
-    nodes = Array::slice.call(el.childNodes)
-    element.shadowRoot.appendChild(node) while node = nodes?.shift()
+    # create
+    comp = new ComponentType(element, props, { timer, events })
+    element.addReleaseCallback ->
+      ko.releaseKeys(comp)
+      ko.cleanNode(element)
 
-  ###
-  # element property change default handler
-  ###
-  onPropertyChange: (name, val) =>
-    return @props[name] = val if Utils.isFunction(val)
-    @props[name]?(val)
+    if template = ComponentType.template
+      el = document.createElement('div')
+      el.innerHTML = template
+      # support webcomponent template polyfill for IE
+      HTMLTemplateElement.bootstrap?(el)
+      unless Object.keys(el).some((test)-> test.indexOf('__ko__') is 0)
+        ko.applyBindings(comp, el)
+
+      nodes = Array::slice.call(el.childNodes)
+      element.renderRoot().appendChild(node) while node = nodes?.shift()
+
+    comp
+
+export register = (ComponentType) ->
+  compose(
+    coreRegister(ComponentType.tag, {props: ComponentType.props})
+    withKO
+  )(ComponentType)
+
+export class Component
+  constructor: (@element, @props, mixins) ->
+    # mixin
+    for name, mixin of mixins
+      for attr of mixin then do (name, attr) ->
+        Object.defineProperty @, attr, {
+          get: -> mixins[name][attr]
+        }
 
   ###
   # knockout explicit memory safe computed for synchronizing values
@@ -48,4 +62,4 @@ module.exports = class KOComponent extends Component
       args = []
       args.push(obsv()) for obsv in observables
       ko.ignoreDependencies -> callback.apply(null, args)
-    @addReleaseCallback -> comp.dispose()
+    @element.addReleaseCallback -> comp.dispose()

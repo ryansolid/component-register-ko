@@ -1,6 +1,6 @@
-ko = require 'knockout'
-{Utils} = require 'component-register'
-CSSPolyfill = require 'component-register/lib/css-polyfill'
+import ko from 'knockout'
+import { Utils } from 'component-register'
+import { requestCSSId } from 'component-register-extensions'
 
 BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
   '|compact|controls|default|formnovalidate|hidden|ismap|itemscope|loop' +
@@ -53,7 +53,6 @@ ko.bindingHandlers.inject =
     return unless template = ko.unwrap(valueAccessor())
     el = document.createElement('div')
     el.appendChild(document.importNode(template.content, true))
-    el.innerHTML = CSSPolyfill.html(el.innerHTML, cssId) if cssId = bindingContext.$root?.cssId
     ko.applyBindingsToDescendants(bindingContext, el)
     nodes = Array::slice.call(el.childNodes)
     ko.virtualElements.emptyNode(element)
@@ -65,19 +64,15 @@ ko.bindingHandlers.inject =
 ko.virtualElements.allowedBindings.portal = true
 ko.bindingHandlers.portal =
   init:  (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) ->
-    mountEl = ko.unwrap(valueAccessor()) or document.body
+    mountEl = document.body
+    name = ko.unwrap(valueAccessor())
     el = document.createElement('div')
     el.host = bindingContext.$root.element
     root = el.attachShadow({mode: 'open'})
     el.appendChild(child) while child = ko.virtualElements.firstChild(element)
     ko.applyBindingsToDescendants(bindingContext, el)
 
-    unless Utils.polyfillCSS
-      script = document.createElement('style')
-      script.setAttribute('type', 'text/css')
-      script.textContent = bindingContext.$root.element.ComponentType.styles
-      root.appendChild(script)
-
+    el._cssId = requestCSSId(bindingContext.$root.element.nodeName + '-' + name)
     root.appendChild(child) while child = el.firstChild
     mountEl.appendChild(el)
 
@@ -92,7 +87,7 @@ ko.bindingHandlers.portal =
 ###
 ko.bindingHandlers.ref =
   after: ['prop', 'attr', 'value', 'checked', 'bindComponent']
-  init: (element, valueAccessor, allBindingsAccessor) ->
+  init: (element, valueAccessor) ->
     valueAccessor()(element)
 
 ###
