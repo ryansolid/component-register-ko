@@ -36,6 +36,7 @@ export withKO = (ComponentType) ->
 
       nodes = Array::slice.call(el.childNodes)
       element.renderRoot().appendChild(node) while node = nodes?.shift()
+      comp.onMounted?(element)
 
     comp
 
@@ -49,7 +50,7 @@ export class Component
   constructor: (@element, @props, mixins) ->
     # mixin
     for name, mixin of mixins
-      for attr of mixin then do (name, attr) ->
+      for attr of mixin then do (name, attr) =>
         Object.defineProperty @, attr, {
           get: -> mixins[name][attr]
         }

@@ -39,6 +39,7 @@ transformList = (nodes) ->
   for node in nodes[..]
     switch node.type
       when 'tag'
+        continue if node.name is 'style'
         dataBindAttribute = node.attrs['data-bind']
         binding = []
         attrList = []

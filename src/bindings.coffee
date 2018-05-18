@@ -73,10 +73,11 @@ ko.bindingHandlers.portal =
     ko.applyBindingsToDescendants(bindingContext, el)
 
     el._cssId = requestCSSId(bindingContext.$root.element.nodeName + '-' + name)
-    root.appendChild(child) while child = el.firstChild
+    Promise.resolve().then ->
+      root.appendChild(child) while child = el.firstChild
     mountEl.appendChild(el)
 
-    ko.utils.domNodeDisposal.addDisposeCallback bindingContext.$root.element, ->
+    bindingContext.$root.element.addReleaseCallback ->
       delete el.host
       ko.removeNode(el)
 
