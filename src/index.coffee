@@ -26,6 +26,11 @@ export withKO = (ComponentType) ->
       ko.releaseKeys(comp)
       ko.cleanNode(element)
 
+    if styles = ComponentType.styles
+      script = document.createElement('style')
+      script.textContent = styles
+      element.renderRoot().appendChild(script)
+
     if template = ComponentType.template
       el = document.createElement('div')
       el.innerHTML = template
