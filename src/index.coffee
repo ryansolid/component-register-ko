@@ -2,7 +2,7 @@ import ko from 'knockout'
 import './extensions'
 import './bindings'
 
-import { register as coreRegister, compose, createMixin, Utils } from 'component-register'
+import { register as coreRegister, compose, createMixin, isFunction } from 'component-register'
 import { withEvents, withTimer, withShadyCSS } from 'component-register-extensions'
 
 export withKO = (ComponentType) ->
@@ -10,14 +10,14 @@ export withKO = (ComponentType) ->
     { element, props: defaultProps, timer, events } = options
     props = {}
     for key, prop of defaultProps then do (key, prop) =>
-      return props[key] = element[key] if Utils.isFunction(element[key])
+      return props[key] = element[key] if isFunction(element[key])
       if Array.isArray(element[key])
         props[key] = ko.observableArray(element[key])
       else props[key] = ko.observable(element[key])
       props[key].subscribe (v) -> element.setProperty(key, v)
 
     element.addPropertyChangedCallback (name, val) ->
-      return props[name] = val if Utils.isFunction(val)
+      return props[name] = val if isFunction(val)
       props[name]?(val)
 
     # create
@@ -47,7 +47,7 @@ export withKO = (ComponentType) ->
 
 export register = (ComponentType) ->
   compose(
-    coreRegister(ComponentType.tag, {props: ComponentType.props})
+    coreRegister(ComponentType.tag, ComponentType.props)
     withKO
   )(ComponentType)
 

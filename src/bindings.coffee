@@ -1,5 +1,5 @@
 import ko from 'knockout'
-import { Utils } from 'component-register'
+import { toAttribute, toProperty, isObject, isString } from 'component-register'
 import { requestCSSId } from 'component-register-extensions'
 
 BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
@@ -16,7 +16,7 @@ ko.bindingHandlers.prop =
       return unless event.target is element
       value = ko.unwrap(valueAccessor())
       name = event.detail.name
-      return unless (obsv = value[name] or value[Utils.toAttribute(name)]) and ko.isObservable(obsv)
+      return unless (obsv = value[name] or value[toAttribute(name)]) and ko.isObservable(obsv)
       new_val = event.detail.value
       new_val = new_val[..] if Array.isArray(new_val)
       obsv(new_val)
@@ -24,14 +24,14 @@ ko.bindingHandlers.prop =
       for k, v of ko.unwrap(valueAccessor())
         value = ko.unwrap(v)
         value = null unless value?
-        if Utils.isObject(value) or k in ['value', 'checked']
-          key = element.lookupProp?(k) or Utils.toProperty(k)
+        if isObject(value) or k in ['value', 'checked']
+          key = element.lookupProp?(k) or toProperty(k)
           element[key] = value
           continue
         # attribute bind
-        key = Utils.toAttribute(k)
+        key = toAttribute(k)
         if value
-          value = JSON.stringify(value) if !Utils.isString(value)
+          value = JSON.stringify(value) if !isString(value)
           continue if element.getAttribute(key) is value
           element.setAttribute(key, value)
           continue
@@ -39,7 +39,7 @@ ko.bindingHandlers.prop =
           if BOOLEAN_ATTR.test(key)
             element.removeAttribute(key)
           else element.setAttribute(key, if value? then value else '')
-        else element[element.lookupProp?(k) or Utils.toProperty(k)] = value
+        else element[element.lookupProp?(k) or toProperty(k)] = value
       return
     , null, {disposeWhenNodeIsRemoved: element}
 
@@ -121,7 +121,7 @@ ko.bindingHandlers.tristate =
 
 isFalsy = (data) ->
   return true unless data
-  return true if Utils.isObject(data) and 'length' of data and not data.length
+  return true if isObject(data) and 'length' of data and not data.length
   false
 
 ###
