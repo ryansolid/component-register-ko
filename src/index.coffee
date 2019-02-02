@@ -6,8 +6,8 @@ import { register as coreRegister, compose, createMixin, isFunction } from 'comp
 import { withEvents, withTimer, withShadyCSS } from 'component-register-extensions'
 
 export withKO = (ComponentType) ->
-  withShadyCSS withEvents withTimer (options) ->
-    { element, props: defaultProps, timer, events } = options
+  withShadyCSS withEvents withTimer (defaultProps, options) ->
+    { element, timer, events } = options
     props = {}
     for key, prop of defaultProps then do (key, prop) =>
       return props[key] = element[key] if isFunction(element[key])

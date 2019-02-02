@@ -3,7 +3,7 @@
   "description": "Knockout implementation of Component Register",
   "author": "Ryan Carniato",
   "license": "MIT",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "main": "lib/component-register-ko.js",
   "module": "dist/component-register-ko.js",
   "scripts": {
@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "html-parse-string": "^0.0.2",
-    "component-register": "0.5.x",
-    "component-register-extensions": "0.0.x"
+    "component-register": "0.6.x",
+    "component-register-extensions": "0.2.x"
   },
   "peerDependencies": {
     "knockout": "3.4.x"

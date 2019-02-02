@@ -11,7 +11,3 @@ Some key extras:
 * 'ref' binding to extract HTML element (to avoid necessity of custom bindings or spaghetti selectors)
 * Reference cleanup functionality
 * Extension functions to transform observables
-
-TODO: Write documentation
-
-TODO: Write tests
