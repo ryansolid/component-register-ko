@@ -14,9 +14,8 @@ addDisposable = (source, subscriber) ->
   subscriber._disposables.push(source.dispose.bind(source)) if source.dispose
 
 valuesArePrimitiveAndEqual = (a, b) ->
-  oldValueIsPrimitive = (a is null) or not (typeof a is 'object' or typeof a is 'function');
-  if oldValueIsPrimitive then (a is b) else false;
-}
+  oldValueIsPrimitive = (a is null) or not (typeof a is 'object' or typeof a is 'function')
+  if oldValueIsPrimitive then (a is b) else false
 
 ###
 # Custom functions to transform observable data
