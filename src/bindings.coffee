@@ -1,5 +1,5 @@
 import ko from 'knockout'
-import { toAttribute, toProperty, isObject, isString } from 'component-register'
+import { toAttribute, toProperty, isObject } from 'component-register'
 import { requestCSSId } from 'component-register-extensions'
 
 BOOLEAN_ATTR =  new RegExp('^(?:disabled|checked|readonly|required|allowfullscreen|auto(?:focus|play)' +
@@ -31,7 +31,7 @@ ko.bindingHandlers.prop =
         # attribute bind
         key = toAttribute(k)
         if value
-          value = JSON.stringify(value) if !isString(value)
+          value = JSON.stringify(value) unless typeof value is 'string'
           continue if element.getAttribute(key) is value
           element.setAttribute(key, value)
           continue

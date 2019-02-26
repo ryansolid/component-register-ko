@@ -14,7 +14,8 @@ export withKO = (ComponentType) ->
       if Array.isArray(element[key])
         props[key] = ko.observableArray(element[key])
       else props[key] = ko.observable(element[key])
-      props[key].subscribe (v) -> element.setProperty(key, v)
+      props[key].subscribe (v) ->
+        element.setProperty(key, v) unless element[key] is v
 
     element.addPropertyChangedCallback (name, val) ->
       return props[name] = val if isFunction(val)

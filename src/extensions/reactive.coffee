@@ -13,6 +13,11 @@ addDisposable = (source, subscriber) ->
       ogDispose?.apply(subscriber, arguments)
   subscriber._disposables.push(source.dispose.bind(source)) if source.dispose
 
+valuesArePrimitiveAndEqual = (a, b) ->
+  oldValueIsPrimitive = (a is null) or not (typeof a is 'object' or typeof a is 'function');
+  if oldValueIsPrimitive then (a is b) else false;
+}
+
 ###
 # Custom functions to transform observable data
 ###
@@ -21,7 +26,7 @@ ko.subscribable.fn.map = (fn) ->
   obsv = ko.pureComputed(=>
     value = @()
     return if value is undefined
-    return obsv?._latestValue if @equalityComparer(value, oldValue)
+    return obsv?._latestValue if valuesArePrimitiveAndEqual(oldValue, value)
     ko.release(obsv?._latestValue) if oldValue
     oldValue = value
     fn(value)
