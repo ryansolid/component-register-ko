@@ -3,25 +3,25 @@
   "description": "Knockout implementation of Component Register",
   "author": "Ryan Carniato",
   "license": "MIT",
-  "version": "0.3.6",
+  "version": "0.4.0",
   "main": "lib/component-register-ko.js",
   "module": "dist/component-register-ko.js",
   "scripts": {
     "prepublishOnly": "rollup -c"
   },
   "devDependencies": {
-    "coffeescript": "2.2.3",
-    "knockout": "3.4.x",
-    "rollup": "^0.58.1",
-    "rollup-plugin-coffee2": "^0.1.15",
-    "rollup-plugin-node-resolve": "^3.3.0"
+    "coffeescript": "2.5.1",
+    "knockout": "3.5.x",
+    "rollup": "^2.1.0",
+    "rollup-plugin-coffee2": "^0.1.16",
+    "@rollup/plugin-node-resolve": "^7.1.1"
   },
   "dependencies": {
-    "html-parse-string": "^0.0.2",
-    "component-register": "0.6.x",
-    "component-register-extensions": "0.2.x"
+    "html-parse-string": "^0.0.5",
+    "component-register": "0.7.x",
+    "component-register-extensions": "0.3.x"
   },
   "peerDependencies": {
-    "knockout": "3.4.x"
+    "knockout": "3.5.x"
   }
 }

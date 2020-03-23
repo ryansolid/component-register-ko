@@ -2,7 +2,7 @@ import ko from 'knockout'
 import './extensions'
 import './bindings'
 
-import { register as coreRegister, compose, createMixin, isFunction } from 'component-register'
+import { register as coreRegister, compose, isFunction } from 'component-register'
 import { withEvents, withTimer, withShadyCSS } from 'component-register-extensions'
 
 export withKO = (ComponentType) ->
@@ -30,7 +30,7 @@ export withKO = (ComponentType) ->
     if styles = ComponentType.styles
       script = document.createElement('style')
       script.textContent = styles
-      element.renderRoot().appendChild(script)
+      element.renderRoot.appendChild(script)
 
     if template = ComponentType.template
       el = document.createElement('div')
@@ -41,7 +41,7 @@ export withKO = (ComponentType) ->
         ko.applyBindings(comp, el)
 
       nodes = Array::slice.call(el.childNodes)
-      element.renderRoot().appendChild(node) while node = nodes?.shift()
+      element.renderRoot.appendChild(node) while node = nodes?.shift()
       comp.onMounted?(element)
 
     comp
