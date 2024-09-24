@@ -12,7 +12,7 @@
   "devDependencies": {
     "coffeescript": "2.5.1",
     "knockout": "3.5.x",
-    "rollup": "^2.1.0",
+    "rollup": "^3.29.5",
     "rollup-plugin-coffee2": "^0.1.16",
     "@rollup/plugin-node-resolve": "^7.1.1"
   },
